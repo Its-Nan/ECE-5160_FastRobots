@@ -11065,3 +11065,19 @@ html {
   background-color: #fff;
   color: #2b6cb0;
 }
+
+/* Custom styles for main page */
+section p {
+  text-align: justify;
+}
+
+.masthead-subheading {
+  text-align: justify;
+}
+
+.masthead-avatar {
+  width: 400px;
+  height: 400px;
+  object-fit: cover;
+}
+
