@@ -42,27 +42,111 @@
         <section class="page-section" id="content">
             <div class="container">
                 <div class="row justify-content-center">
-                    <div class="col-lg-8">
-                        <h2 class="text-center text-uppercase text-secondary mb-4">Overview</h2>
-                        <p class="lead" style="text-align: justify;">
-                            In this lab, we set up the SparkFun Artemis board and established Bluetooth connectivity. We configured the development environment, uploaded the first sketch, and tested wireless communication between the robot and the computer.
-                        </p>
+                    <div class="col-lg-10">
+                        <h2 class="text-uppercase text-secondary mb-4">Lab 1A: Artemis Setup</h2>
                         
-                        <h3 class="text-secondary mt-5 mb-3">Objectives</h3>
+                        <h3 class="text-secondary mt-4 mb-3">Prelab</h3>
+                        <p class="lead" style="text-align: justify;">
+                            Prior to the lab session, I successfully installed the latest version of the Arduino IDE and the SparkFun Apollo3 boards manager, following the provided lab instructions.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Blink</h3>
+                        <p class="lead" style="text-align: justify;">
+                            For this task, I loaded the 01.Basics Blink example onto the board. Upon successful flashing, the onboard LED began blinking at the expected intervals.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Serial</h3>
+                        <p class="lead" style="text-align: justify;">
+                            Using the Serial Monitor in the Arduino IDE, I verified that the Artemis board correctly receives character strings and echoes them back, confirming a functional serial communication link.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">AnalogRead</h3>
+                        <p class="lead" style="text-align: justify;">
+                            In this experiment, I monitored the onboard temperature sensor. When I applied pressure and warmth to the sensor, the temperature readings increased significantly. This indicates that both the sensor and the analogRead function are working correctly.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">MicrophoneOutput</h3>
+                        <p class="lead" style="text-align: justify;">
+                            For this part, I used an online frequency generator to produce various tones. As shown in the video, the program correctly captured the audio and displayed the corresponding frequency outputs in the Serial Monitor.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Additional Tasks for 5000-level</h3>
+                        <p class="lead" style="text-align: justify;">
+                            To implement tone detection, I defined three target frequencies: 440Hz (A4), 523Hz (C5), and 659Hz (E5). I also implemented a 10Hz tolerance window to account for signal fluctuations and environmental noise.
+                        </p>
+                        <p class="lead" style="text-align: justify;">
+                            Using an online frequency generator, I tested the board's response to different inputs. When the board identifies a frequency within the specified range of a target note, the Serial Monitor displays a message such as: <code>Match Note Found: E5 (663 Hz)</code>. If no match is detected, the program defaults to outputting the <code>Loudest Freq</code>, similar to the previous task.
+                        </p>
+
+                        <!-- Lab 1B Section -->
+                        <h2 class="text-uppercase text-secondary mb-4 mt-5">Lab 1B: Bluetooth Communication</h2>
+
+                        <h3 class="text-secondary mt-4 mb-3">Prelab</h3>
+                        <p class="lead" style="text-align: justify;">
+                            I created a Python environment named fastrobots and installed the required packages for this lab. Subsequently, I downloaded and organized the codebase into my project directory. In the Arduino IDE, I installed the ArduinoBLE library via the Library Manager. After flashing the ble_arduino.ino sketch to the board, I retrieved its unique MAC address from the Serial Monitor.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Configurations</h3>
+                        <p class="lead" style="text-align: justify;">
+                            Following the lab instructions, I updated the Python configuration files on my computer with the Artemis board's MAC address to ensure a successful connection. To verify the setup, I executed the initial Jupyter Notebook; all cells ran successfully, confirming that the computer and the board could communicate over BLE.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Task 1: ECHO</h3>
+                        <p class="lead" style="text-align: justify;">
+                            For this task, I implemented the <code>ECHO</code> command by adapting the logic from the existing <code>PING</code> function. When I sent a command containing the string "HiHello", the Artemis board successfully processed the characteristic and returned: <code>Robot says -&gt; HiHello :)</code>.
+                        </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-1_1.png" alt="Task 1 Code" class="img-fluid" style="max-width: 60%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+                        <div class="mt-3 mb-4 text-center">
+                            <img src="lab1_image/lab1b-1_2.png" alt="Task 1 Output" class="img-fluid" style="max-width: 60%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+
+                        <h3 class="text-secondary mt-4 mb-3">Task 2: SEND_THREE_FLOATS</h3>
+                        <p class="lead" style="text-align: justify;">
+                            I implemented the SEND_THREE_FLOATS function to extract three float values from a received command. The board parses these values and displays them in the Serial Monitor.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Task 3: GET_TIME_MILLIS</h3>
+                        <p class="lead" style="text-align: justify;">
+                            I implemented the <code>GET_TIME_MILLIS</code> command to retrieve the internal system uptime of the Artemis board. The command utilizes the <code>millis()</code> function, which returns the number of milliseconds elapsed since the program began execution. This value is then packaged and sent back to the Python client as a string.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Task 4: Notification Handler</h3>
+                        <p class="lead" style="text-align: justify;">
+                            For this task, I implemented a <code>notification_handler</code> function. This callback function receives the raw byte array from the BLE characteristic and extracts the timestamp using string splitting and decoding. After starting notifications, I tested the loop by sending a <code>GET_TIME_MILLIS</code> command. The computer successfully received and printed the time value immediately upon the board's update, confirming that the notification system is working correctly for real-time data transfer.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Task 5: Loop Test</h3>
+                        <p class="lead" style="text-align: justify;">
+                            I implemented a <code>LOOP_TEST</code> command to measure data transfer performance over a 5000ms interval. During this loop, the Artemis board continuously updates the string characteristic with current timestamps. By monitoring the output in the Python notebook, I was able to observe the update frequency and calculate the effective data transfer rate of this communication method.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Task 6: SEND_TIME_DATA</h3>
+                        <p class="lead" style="text-align: justify;">
+                            To optimize data handling, I defined a global array <code>Time_Array</code> with a <code>Max_Samples</code> of 100. I wrote a <code>RECORD_TIME_DATA</code> function to capture and store timestamps directly into this array on the board. On the computer side, I initialized a <code>collected_times</code> list and implemented <code>notification_handler_2</code>. The handler extracts each timestamp and appends it to the Python list. Finally, I verified the data integrity by printing the collected timestamps, confirming successful data transfer from the board to the computer.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Task 7: GET_TEMP_READINGS</h3>
+                        <p class="lead" style="text-align: justify;">
+                            Similar to the previous task, I added a global <code>Temp_Array</code> to store temperature readings alongside the <code>Time_Array</code>. I implemented the <code>RECORD_TIME_TEMP</code> function to concurrently capture timestamps and their corresponding temperature values. On the computer side, I initialized <code>time_list</code> and <code>temp_list</code> and created <code>notification_handler_3</code> to handle the incoming data strings. The handler extracts both values and appends them to their respective lists. Finally, I printed the results as data pairs to verify the synchronized collection of time and temperature.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Task 8: Two Methods Comparison</h3>
+                        <h5 class="text-secondary mt-3 mb-2">Method 1: Sending Data Real-Time</h5>
                         <ul class="lead" style="text-align: justify;">
-                            <li>Set up the Artemis board environment</li>
-                            <li>Establish Bluetooth connection</li>
-                            <li>Configure wireless communication</li>
-                            <li>Test data transmission</li>
+                            <li><strong>Advantages:</strong> We don't need to store a large Array in board which requires less memory usage, ensuring system stability.</li>
+                            <li><strong>Disadvantages:</strong> The transmit speed is limited by the BLE connection intervals and signal interference can lead to inconsistent sampling rates.</li>
                         </ul>
 
-                        <h3 class="text-secondary mt-5 mb-3">Results</h3>
-                        <p class="lead" style="text-align: justify;">
-                            Successfully connected the Artemis board to the computer via Bluetooth and transmitted test data. The board was able to receive commands and send sensor readings wirelessly.
-                        </p>
+                        <h5 class="text-secondary mt-3 mb-2">Method 2: Buffering Data</h5>
+                        <ul class="lead" style="text-align: justify;">
+                            <li><strong>Advantages:</strong> The sampling process doesn't involve low-speed Bluetooth communication, allowing for highly stable, high-frequency data capture directly into RAM.</li>
+                            <li><strong>Disadvantages:</strong> The total amount of data that can be recorded is strictly limited by the size of the RAM, and results can only be processed after the recording period concludes.</li>
+                        </ul>
 
                         <div class="text-center mt-5">
-                            <a class="btn btn-primary btn-lg" href="../index.html">Back to Labs</a>
+                            <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
                         </div>
                     </div>
                 </div>
