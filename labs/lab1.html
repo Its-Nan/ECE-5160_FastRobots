@@ -182,7 +182,10 @@
                             I implemented the <code>GET_TIME_MILLIS</code> command to get the board's running time in milliseconds. The command utilizes the <code>millis()</code> function, which returns the number of milliseconds elapsed since the program began execution. This value is then packaged and sent back to the Python client as a string.
                         </p>
                         <div class="mt-4 mb-4 text-center">
-                            <img src="lab1_image/lab1b-3.png" alt="Task 3 Code and Output" class="img-fluid" style="max-width: 60%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                            <img src="lab1_image/lab1b-3_0.png" alt="Task 3 Code" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-3.png" alt="Task 3 Output" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
                         </div>
 
                         <h3 class="text-secondary mt-4 mb-3">Task 4: Notification Handler</h3>
@@ -212,8 +215,8 @@
                             In the 100-sample set, I observed two complete timestamps and each produced approximately 30 entries. This indicates that within 1 ms, the Arduino system stored around thirty timestamp entries. Therefore, the storage rate of this method is <em>Rate</em> = <span class="text-nowrap">30 entries</span> / <span class="text-nowrap">1 ms</span> = <strong class="text-nowrap">30,000 entries/s</strong>.
                         </p>
                         
-                        <div class="gist-container mb-4" style="border-radius: 8px; overflow: hidden; border: 1px solid #ddd;">
-                            <script src="https://gist.github.com/Its-Nan/db3cc70b7cfecc87620b15197a2db0a7.js"></script>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-6_0.png" alt="Task 6 Code and Output" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
                         </div>
                         <div class="mt-4 mb-4 text-center">
                             <img src="lab1_image/lab1b-6.png" alt="Task 6 Code and Output" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
@@ -224,6 +227,9 @@
                         <p class="lead" style="text-align: justify;">
                             Similar to the previous task, I added a global <code>Temp_Array</code> to store temperature readings alongside the <code>Time_Array</code>. I implemented the <code>RECORD_TIME_TEMP</code> function to concurrently capture timestamps and their corresponding temperature values. On the computer side, I initialized <code>time_list</code> and <code>temp_list</code> and created <code>notification_handler_3</code> to handle the incoming data strings. The handler extracts both values and appends them to their respective lists. Finally, I printed the results as data pairs to verify the synchronized collection of time and temperature.
                         </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-7_0.png" alt="Task 7 Code and Output" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
                         <div class="mt-4 mb-4 text-center">
                             <img src="lab1_image/lab1b-7.png" alt="Task 7 Code and Output" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
                         </div>
@@ -280,6 +286,9 @@
                             To evaluate communication reliability, I implemented a <code>RELIABILITY_TEST</code> function on the Artemis board that transmits a sequence of 1,000 messages formatted as "D:i" (from i = 0 to 999). On the computer, I utilized a notification handler to capture the incoming data and store it in a Python list for verification. Upon inspection, I confirmed that all 1,000 packets were collected successfully and in the correct order. This 0% loss rate demonstrates that the BLE link between the computer and the Artemis board is reliable.
                         </p>
                         <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-10_0.png" alt="Reliability Test Code" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+                        <div class="mt-4 mb-4 text-center">
                             <img src="lab1_image/lab1b-10_1.png" alt="Reliability Test Code and Output" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
                         </div>
                         <div class="mt-4 mb-4 text-center">
@@ -287,7 +296,18 @@
                         </div>
 
                         <h2 class="text-uppercase text-secondary mb-4 mt-5">Discussion</h2>
+                        <p class="lead" style="text-align: justify;">
+                            In this lab, I successfully set up the Artemis board and established Bluetooth communication with my computer. Through a series of experiments, I verified the board's basic functionalities, including blinking an LED, reading analog values, and capturing microphone input. The Bluetooth communication tests demonstrated reliable data transfer with some latency. The additional tasks for 5000-level provided insights into optimizing data transfer rates and ensuring communication reliability. Overall, this lab enhanced my understanding of embedded systems and wireless communication protocols.
+                        </p>
 
+                        <h3 class="text-secondary mt-4 mb-3">Reference</h3>
+                        <p class="lead" style="text-align: justify;">
+                            Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Katherine Hsu's website as guidance and as a reference for web design.
+                        </p>
+                        <h4 class="text-secondary mt-4 mb-3">Note</h4>
+                        <p class="lead" style="text-align: justify;">
+                            In the report, I did not put some code implementations of simple functions and roughly duplicate parts. If necessary, please feel free to contact me.
+                        </p>
                         <div class="text-center mt-5">
                             <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
                         </div>
