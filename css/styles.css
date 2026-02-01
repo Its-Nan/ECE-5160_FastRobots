@@ -11066,6 +11066,20 @@ html {
   color: #2b6cb0;
 }
 
+/* Responsive video containers */
+.video-block {
+  max-width: 800px;
+  margin: 30px auto;
+}
+@media (max-width: 992px) {
+  .video-block {
+    max-width: 100%;
+  }
+}
+.ratio iframe {
+  border: 0;
+}
+
 /* Custom styles for main page */
 section p {
   text-align: justify;
@@ -11083,39 +11097,6 @@ section p {
 
 
 
-.vertical-video-container {
-    position: relative;
-    padding-bottom: 177.78%; 
-    height: 0;
-    overflow: hidden;
-    border-radius: 12px;
-    background: #000;
-}
-
-.vertical-video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.horizontal-video-wrapper {
-    position: relative;
-    padding-bottom: 56.25%; 
-    width: 100%;
-    height: 0;
-    overflow: hidden;
-    border-radius: 12px;
-    background-color: #000;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.horizontal-video-wrapper iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-}
+.video-block { max-width: 1000px; margin: 30px auto; }
+@media (max-width: 992px) { .video-block { max-width: 100%; } }
+.ratio iframe { border: 0; }
