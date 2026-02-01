@@ -11068,7 +11068,7 @@ html {
 
 /* Responsive video containers */
 .video-block {
-  max-width: 800px;
+  max-width: 900px;
   margin: 30px auto;
 }
 @media (max-width: 992px) {
@@ -11095,8 +11095,8 @@ section p {
   object-fit: cover;
 }
 
+.ratio-9x16 { --bs-aspect-ratio: calc(16 / 9 * 100%); }
+
+.video-block.video-vertical   { max-width: 300px; }
 
 
-.video-block { max-width: 1000px; margin: 30px auto; }
-@media (max-width: 992px) { .video-block { max-width: 100%; } }
-.ratio iframe { border: 0; }
