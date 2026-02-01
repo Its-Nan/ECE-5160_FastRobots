@@ -15,6 +15,19 @@
         <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="../css/styles.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+            ]
+            });
+        });
+</script>
     </head>
     <body id="page-top">
         <!-- Navigation-->
@@ -59,6 +72,9 @@
                         <p class="lead" style="text-align: justify;">
                             Using the Serial Monitor in the Arduino IDE, I verified that the Artemis board correctly receives character strings and echoes them back, confirming a functional serial communication link.
                         </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1a-3.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
 
                         <h3 class="text-secondary mt-4 mb-3">AnalogRead</h3>
                         <p class="lead" style="text-align: justify;">
@@ -90,6 +106,12 @@
                         <p class="lead" style="text-align: justify;">
                             Following the lab instructions, I updated the Python configuration files on my computer with the Artemis board's MAC address to ensure a successful connection. To verify the setup, I executed the initial Jupyter Notebook; all cells ran successfully, confirming that the computer and the board could communicate over BLE.
                         </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-config1.png" alt="Configuration Screenshot" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-config2.png" alt="Configuration Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
 
                         <h3 class="text-secondary mt-4 mb-3">Task 1: ECHO</h3>
                         <p class="lead" style="text-align: justify;">
@@ -106,31 +128,64 @@
                         <p class="lead" style="text-align: justify;">
                             I implemented the SEND_THREE_FLOATS function to extract three float values from a received command. The board parses these values and displays them in the Serial Monitor.
                         </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-2_1.png" alt="Task 2 Code" class="img-fluid" style="max-width: 60%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+                        <div class="mt-3 mb-4 text-center">
+                            <img src="lab1_image/lab1b-2_2.png" alt="Task 2 Output" class="img-fluid" style="max-width: 60%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+
 
                         <h3 class="text-secondary mt-4 mb-3">Task 3: GET_TIME_MILLIS</h3>
                         <p class="lead" style="text-align: justify;">
-                            I implemented the <code>GET_TIME_MILLIS</code> command to retrieve the internal system uptime of the Artemis board. The command utilizes the <code>millis()</code> function, which returns the number of milliseconds elapsed since the program began execution. This value is then packaged and sent back to the Python client as a string.
+                            I implemented the <code>GET_TIME_MILLIS</code> command to get the board's running time in milliseconds. The command utilizes the <code>millis()</code> function, which returns the number of milliseconds elapsed since the program began execution. This value is then packaged and sent back to the Python client as a string.
                         </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-3.png" alt="Task 3 Code and Output" class="img-fluid" style="max-width: 60%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
 
                         <h3 class="text-secondary mt-4 mb-3">Task 4: Notification Handler</h3>
                         <p class="lead" style="text-align: justify;">
                             For this task, I implemented a <code>notification_handler</code> function. This callback function receives the raw byte array from the BLE characteristic and extracts the timestamp using string splitting and decoding. After starting notifications, I tested the loop by sending a <code>GET_TIME_MILLIS</code> command. The computer successfully received and printed the time value immediately upon the board's update, confirming that the notification system is working correctly for real-time data transfer.
                         </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-4.png" alt="Task 4 Code and Output" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
 
                         <h3 class="text-secondary mt-4 mb-3">Task 5: Loop Test</h3>
                         <p class="lead" style="text-align: justify;">
                             I implemented a <code>LOOP_TEST</code> command to measure data transfer performance over a 5000ms interval. During this loop, the Artemis board continuously updates the string characteristic with current timestamps. By monitoring the output in the Python notebook, I was able to observe the update frequency and calculate the effective data transfer rate of this communication method.
                         </p>
+                        <p class="lead" style="text-align: justify;">
+                            In the 5-second time interval, I received 330 messages. Therefore, the effective data transfer rate of this method is <em>Rate</em> = <span class="text-nowrap">330 entries</span> / <span class="text-nowrap">5 s</span> = <strong class="text-nowrap">66 entries/s</strong>
+                        </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-5.png" alt="Task 5 Code and Output" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
 
                         <h3 class="text-secondary mt-4 mb-3">Task 6: SEND_TIME_DATA</h3>
                         <p class="lead" style="text-align: justify;">
-                            To optimize data handling, I defined a global array <code>Time_Array</code> with a <code>Max_Samples</code> of 100. I wrote a <code>RECORD_TIME_DATA</code> function to capture and store timestamps directly into this array on the board. On the computer side, I initialized a <code>collected_times</code> list and implemented <code>notification_handler_2</code>. The handler extracts each timestamp and appends it to the Python list. Finally, I verified the data integrity by printing the collected timestamps, confirming successful data transfer from the board to the computer.
+                            Next, I defined a global array <code>Time_Array</code> with a <code>Max_Samples</code> of 100. I wrote a <code>RECORD_TIME_DATA</code> function to capture and store timestamps directly into this array on the board. On the computer side, I initialized a <code>collected_times</code> list and implemented <code>notification_handler_2</code>. The handler extracts each timestamp and appends it to the Python list. Finally, I verified the data integrity by printing the collected timestamps, confirming successful data transfer from the board to the computer.
                         </p>
+                        <p class="lead" style="text-align: justify;">
+                            In the 100-sample set, I observed two complete timestamps and each produced approximately 30 entries. This indicates that within 1 ms, the Arduino system stored around thirty timestamp entries. Therefore, the storage rate of this method is <em>Rate</em> = <span class="text-nowrap">30 entries</span> / <span class="text-nowrap">1 ms</span> = <strong class="text-nowrap">30,000 entries/s</strong>.
+                        </p>
+                        
+                        <div class="gist-container mb-4" style="border-radius: 8px; overflow: hidden; border: 1px solid #ddd;">
+                            <script src="https://gist.github.com/Its-Nan/db3cc70b7cfecc87620b15197a2db0a7.js"></script>
+                        </div>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-6.png" alt="Task 6 Code and Output" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+
 
                         <h3 class="text-secondary mt-4 mb-3">Task 7: GET_TEMP_READINGS</h3>
                         <p class="lead" style="text-align: justify;">
                             Similar to the previous task, I added a global <code>Temp_Array</code> to store temperature readings alongside the <code>Time_Array</code>. I implemented the <code>RECORD_TIME_TEMP</code> function to concurrently capture timestamps and their corresponding temperature values. On the computer side, I initialized <code>time_list</code> and <code>temp_list</code> and created <code>notification_handler_3</code> to handle the incoming data strings. The handler extracts both values and appends them to their respective lists. Finally, I printed the results as data pairs to verify the synchronized collection of time and temperature.
                         </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-7.png" alt="Task 7 Code and Output" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
 
                         <h3 class="text-secondary mt-4 mb-3">Task 8: Two Methods Comparison</h3>
                         <h5 class="text-secondary mt-3 mb-2">Method 1: Sending Data Real-Time</h5>
@@ -144,6 +199,53 @@
                             <li><strong>Advantages:</strong> The sampling process doesn't involve low-speed Bluetooth communication, allowing for highly stable, high-frequency data capture directly into RAM.</li>
                             <li><strong>Disadvantages:</strong> The total amount of data that can be recorded is strictly limited by the size of the RAM, and results can only be processed after the recording period concludes.</li>
                         </ul>
+
+                        <p class="lead" style="text-align: justify;">
+                            The previous experiment demonstrated that while Method 1 transfers data at 66 entries/s, Method 2 records at 30,000 entries/s. Method 2 is significantly faster and offers superior data integrity by decoupling sampling from communication overhead.
+                        </p>
+
+                        <h5 class="text-secondary mt-3 mb-2">Use Cases</h5>
+                        <ul class="lead" style="text-align: justify;">
+                            <li><strong>Method 1:</strong> I would choose this for live monitoring of robot status, ensuring instant access to the robot's state at any given moment.</li>
+                            <li><strong>Method 2:</strong> I would adopt this for high-speed testing that requires complete data collection over short intervals. This ensures data integrity and allows for precise parameter backtracing during post-analysis.</li>
+                        </ul>
+
+                        <p class="lead" style="text-align: justify;">
+                            Assuming we use the <code>int</code> data type for calculations and storage, where each <code>int</code> is 32 bits (4 bytes), the theoretical maximum storage capacity is calculated as follows:
+                        </p>
+                        <p class="lead text-center" style="font-size: 1.05rem;">
+                            $$\text{Theoretical Capacity} = \frac{384 \times 1024\ \text{bytes}}{4\ \text{bytes/int}} = 98{,}304\ \text{data entries}$$
+                        </p>
+                        <p class="lead" style="text-align: justify;">
+                            However, in a practical application, the actual number of data entries we can store will be significantly lower than this theoretical capacity, because memory must also be reserved for system runtime and other programs rather than dedicating all RAM to data storage.
+                        </p>
+
+                        <h3 class="text-secondary mt-4 mb-3">Additional Tasks for 5000-level</h3>
+                        <h4 class="text-secondary mt-3 mb-3">Effective Data Rate And Overhead</h4>
+                        <p class="lead" style="text-align: justify;">
+                            I implemented a test loop that requested reply sizes ranging from 5 to 120 bytes in 5-byte increments. For each request, the Artemis board returned a string of 'A' characters of the specified length. I recorded the round-trip time and calculated the effective data rate for each size.
+                        </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-9_1.png" alt="Additional Task Code" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+                        <div class="mt-3 mb-4 text-center">
+                            <img src="lab1_image/lab1b-9_2.png" alt="Additional Task Output" class="img-fluid" style="max-width: 70%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+                        <p class="lead" style="text-align: justify;">
+                            As the reply data size increases from 5 to 120 bytes, the effective data rate demonstrates a distinct upward trend, peaking at approximately 1565.89 bytes/s. This is because that, at lower payload sizes, fixed system overhead, such as BLE protocol headers and connection setup latency, constitutes a dominant portion of the total transmission time, resulting in low efficiency. Conversely, increasing the data size reduces the relative proportion of these overhead costs, allowing the system to maximize throughput within similar timeframes. Therefore, larger replies significantly optimize communication performance by reducing the effect of fixed costs. Even though the rate curve displays a "sawtooth" pattern, the overall transmission rate shows an upward trend.
+                        </p>
+                        <h4 class="text-secondary mt-3 mb-3">Reliability</h4>
+                        <p class="lead" style="text-align: justify;">
+                            To evaluate communication reliability, I implemented a <code>RELIABILITY_TEST</code> function on the Artemis board that transmits a sequence of 1,000 messages formatted as "D:i" (from i = 0 to 999). On the computer, I utilized a notification handler to capture the incoming data and store it in a Python list for verification. Upon inspection, I confirmed that all 1,000 packets were collected successfully and in the correct order. This 0% loss rate demonstrates that the BLE link between the computer and the Artemis board is reliable.
+                        </p>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-10_1.png" alt="Reliability Test Code and Output" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+                        <div class="mt-4 mb-4 text-center">
+                            <img src="lab1_image/lab1b-10_2.png" alt="Reliability Test Code and Output" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                        </div>
+
+                        <h2 class="text-uppercase text-secondary mb-4 mt-5">Discussion</h2>
 
                         <div class="text-center mt-5">
                             <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
