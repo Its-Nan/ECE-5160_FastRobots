@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Lab 2 - ECE 5160 Fast Robots</title>
+
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" />
+
+    <link href="../css/styles.css" rel="stylesheet" />
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        });
+    </script>
+</head>
+
+<body id="page-top">
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="../index.html">Back to Home</a>
+    </div>
+</nav>
+
+<!-- Masthead -->
+<header class="masthead bg-primary text-white text-center" style="padding: 9rem 0 3rem 0;">
+    <div class="container d-flex align-items-center flex-column">
+        <h1 class="masthead-heading text-uppercase mb-0">Lab 2</h1>
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
+        </div>
+        <p class="masthead-subheading font-weight-light mb-0">
+            Lab 2: IMU Integration and Sensor Fusion
+        </p>
+    </div>
+</header>
+
+<!-- Content -->
+<section class="page-section" id="content">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-10">
+
+<h2 class="text-uppercase text-secondary mb-4">Lab 2 Overview</h2>
+<p class="lead" style="text-align: justify;">
+    The purpose of this lab is to add the IMU to our robot, start running the Artemis+sensors from a battery, and record a stunt on our RC robot.
+</p>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">IMU Setup</h3>
+<p class="lead" style="text-align: justify;">
+    To configure the IMU, the <code>AD0_VAL</code> was set to 1. This matches the hardware configuration where the unsoldered ADR jumper pulls the AD0 pin to a HIGH state, determining the least significant bit of the I2C address.
+</p>
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-1_1.jpg" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 30%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    To verify the setup, the <code>Example1_Basics</code> library script was executed. Successful acquisition of accelerometer and gyroscope data confirmed that the IMU was fully operational and communicating correctly.
+</p>
+
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-1_2.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Accelerometer</h3>
+<p class="lead" style="text-align: justify;">
+    According to the content in the Lecture4-IMU file, I used atan2 and M_PI to convert the accelerometer data into pitch and roll. Based on the pitch and roll results obtained during the experiment, I found that the measurement accuracy was sufficiently high with minimal error. Therefore, I did not proceed with the subsequent two-point calibration.
+</p>
+
+
+<div class="d-flex justify-content-center gap-4 mt-4 mb-4">
+    <img src="lab2_image/lab2-2_1.png"
+         class="img-fluid"
+         style="max-width: 40%; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+    <img src="lab2_image/lab2-2_2.png"
+         class="img-fluid"
+         style="max-width: 40%; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+<div class="d-flex justify-content-center gap-4 mt-4 mb-4">
+    <img src="lab2_image/lab2-2_3.png"
+         class="img-fluid"
+         style="max-width: 40%; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+    <img src="lab2_image/lab2-2_4.png"
+         class="img-fluid"
+         style="max-width: 40%; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    Following preliminary testing, I implemented a Bluetooth data collection system using a buffering strategy similar to Lab 1. Data was first aggregated within a continuous loop on the board and then transmitted to a Python list. This approach facilitated the plotting of rotation angles against time, allowing for observation and analysis of the sensor data.
+</p>
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-2_5.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-2_6.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 60%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+
+<p class="lead" style="text-align: justify;">
+    To analyze noise in the signal, I processed it using a Fourier transform. I set the cutoff to 5Hz and calculated $\alpha$ as 0.0793 based on the sampling frequency. Subsequently, I resampled the accelerometer data. After applying low-pass filtering, the overall curve appeared smoother, eliminating the sharp peaks and troughs caused by low-frequency fluctuations in the original data. Upon re-examining the Fourier-transformed signal, we observed a significant reduction in amplitude below the cutoff frequency, confirming that this method effectively suppressed low-frequency components.
+</p>
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-2_7.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+<div class="d-flex justify-content-center gap-4 mt-4 mb-4">
+    <img src="lab2_image/lab2-2_8.png"
+         class="img-fluid"
+         style="max-width: 50%; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+    <img src="lab2_image/lab2-2_9.png"
+         class="img-fluid"
+         style="max-width: 50%; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Gyroscope</h3>
+<p class="lead" style="text-align: justify;">
+    In this section, I implemented gyroscope-based calculations for pitch, roll, and yaw. This logic was integrated with the previous accelerometer setup to simultaneously record raw, low-pass filtered accelerometer data, and gyroscope data. The IMU was rotated manually to generate the data for the comparison plots.
+</p>
+
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-3_1.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    The most obvious difference in my plots is the drift of the gyroscope versus the noise of the accelerometer. We can notice that the Green line slowly separates from the Blue and Orange lines as time goes on. The plots demonstrate why sensor fusion is necessary. We need the Gyroscope for smooth, fast updates, but we also need the Accelerometer to constantly pull the Gyro back to reality and correct that drift.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    To address these limitations, a Complementary Filter was implemented with $\alpha_{com} = 0.04$. This approach effectively combines the short-term stability of the gyroscope with the long-term accuracy of the accelerometer.
+</p>
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-3_2.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    Finally, we can see that this specific method  effectively eliminates the long-term drift observed in the raw gyroscope data while rejecting the high-frequency jitter present in the accelerometer readings.
+</p>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Sample Data</h3>
+<p class="lead" style="text-align: justify;">
+    To achieve high-speed data collection, I implemented a sampling loop controlled by a <code>start_flag</code>. Upon receiving the <code>GET_IMU_START</code> command from Python, the flag is set to true, triggering the recording process. The main loop exclusively handles IMU data retrieval and storage into pre-allocated arrays, with all print statements removed to minimize latency. For every iteration, I captured 10 distinct data points: Timestamp, Accelerometer: Pitch and Roll (Raw), Low-Pass Filter (LPF): Pitch and Roll, Gyroscope: Pitch, Roll, and Yaw , Complementary Filter: Pitch and Roll.
+</p>
+
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-4_1.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    After 5 seconds, the <code>GET_IMU_STOP</code> command terminated data collection and initiated Bluetooth transmission. A total of 1,726 entries were captured, corresponding to an effective sampling rate of approximately <strong>343 Hz</strong>.
+</p>
+
+<div class="d-flex justify-content-center gap-4 mt-4 mb-4">
+    <img src="lab2_image/lab2-4_2.png"
+         class="img-fluid"
+         style="max-width: 60%; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+    <img src="lab2_image/lab2-4_3.png"
+         class="img-fluid"
+         style="max-width: 70%; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    This demonstrates that the Artemis board is capable of efficiently capturing and storing dense, time-synchronized IMU data well beyond the requirements of this lab.
+</p>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Record a Stunt</h3>
+<p class="lead" style="text-align: justify;">
+    Using the fully integrated IMU pipeline and battery-powered setup, the RC robot successfully recorded sensor data during a stunt maneuver. The collected IMU data provides a complete temporal record of the robot’s motion for post-analysis.
+</p>
+
+<div class="text-center mt-5">
+    <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
