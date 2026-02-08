@@ -88,6 +88,10 @@
     According to the content in the Lecture4-IMU file, I used atan2 and M_PI to convert the accelerometer data into pitch and roll. Based on the pitch and roll results obtained during the experiment, I found that the measurement accuracy was sufficiently high with minimal error. Therefore, I did not proceed with the subsequent two-point calibration.
 </p>
 
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-2_1code.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
 
 <div class="d-flex justify-content-center gap-4 mt-4 mb-4">
     <img src="lab2_image/lab2-2_1.png"
@@ -121,6 +125,11 @@
 <p class="lead" style="text-align: justify;">
     To analyze noise in the signal, I processed it using a Fourier transform. I set the cutoff to 5Hz and calculated $\alpha$ as 0.0793 based on the sampling frequency. Subsequently, I resampled the accelerometer data. After applying low-pass filtering, the overall curve appeared smoother, eliminating the sharp peaks and troughs caused by low-frequency fluctuations in the original data. Upon re-examining the Fourier-transformed signal, we observed a significant reduction in amplitude below the cutoff frequency, confirming that this method effectively suppressed low-frequency components.
 </p>
+
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-2_2code.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
 <div class="mt-4 mb-4 text-center">
     <img src="lab2_image/lab2-2_7.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
 </div>
@@ -143,6 +152,10 @@
 </p>
 
 <div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-3_1code.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
+<div class="mt-4 mb-4 text-center">
     <img src="lab2_image/lab2-3_1.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
 </div>
 
@@ -151,8 +164,12 @@
 </p>
 
 <p class="lead" style="text-align: justify;">
-    To address these limitations, a Complementary Filter was implemented with $\alpha_{com} = 0.04$. This approach effectively combines the short-term stability of the gyroscope with the long-term accuracy of the accelerometer.
+    To address these limitations, a Complementary Filter was implemented with $\alpha_{com} = 0.04$. In code, I set another variable $\beta = 0.96$, which is equal to the complement of $\alpha_{com}$. This approach effectively combines the short-term stability of the gyroscope with the long-term accuracy of the accelerometer.
 </p>
+
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-3_2code.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
 <div class="mt-4 mb-4 text-center">
     <img src="lab2_image/lab2-3_2.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
 </div>
@@ -175,15 +192,14 @@
 <p class="lead" style="text-align: justify;">
     After 5 seconds, the <code>GET_IMU_STOP</code> command terminated data collection and initiated Bluetooth transmission. A total of 1,726 entries were captured, corresponding to an effective sampling rate of approximately <strong>343 Hz</strong>.
 </p>
-
-<div class="d-flex justify-content-center gap-4 mt-4 mb-4">
-    <img src="lab2_image/lab2-4_2.png"
-         class="img-fluid"
-         style="max-width: 60%; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
-    <img src="lab2_image/lab2-4_3.png"
-         class="img-fluid"
-         style="max-width: 70%; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-4_2.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
 </div>
+
+<div class="mt-4 mb-4 text-center">
+    <img src="lab2_image/lab2-4_3.png" alt="Serial Monitor Screenshot" class="img-fluid" style="max-width: 80%; height: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+</div>
+
 
 <p class="lead" style="text-align: justify;">
     This demonstrates that the Artemis board is capable of efficiently capturing and storing dense, time-synchronized IMU data well beyond the requirements of this lab.
@@ -193,7 +209,27 @@
 
 <h3 class="text-secondary mt-4 mb-3">Record a Stunt</h3>
 <p class="lead" style="text-align: justify;">
-    Using the fully integrated IMU pipeline and battery-powered setup, the RC robot successfully recorded sensor data during a stunt maneuver. The collected IMU data provides a complete temporal record of the robot’s motion for post-analysis.
+    I played with the remote-controlled car for a while and found it incredibly fast. Plus, pressing the left and right buttons makes it spin in place, which is really fun.
+</p>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/TawrWLLPz7k"
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<h3 class="text-secondary mt-4 mb-3">Reference</h3>
+<p class="lead" style="text-align: justify;">
+    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Katherine Hsu's website as guidance and as a reference for web design. I used Nano Banana Pro to help me with generating the cover of my lab, which is shown in the home page.
+</p>
+<h4 class="text-secondary mt-4 mb-3">Note</h4>
+<p class="lead" style="text-align: justify;">
+    In the report, I did not put some code implementations of simple functions and roughly duplicate parts. If necessary, please feel free to contact me.
 </p>
 
 <div class="text-center mt-5">
