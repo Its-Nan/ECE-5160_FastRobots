@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Lab 3 - ECE 5160 Fast Robots</title>
+
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" />
+
+    <link href="../css/styles.css" rel="stylesheet" />
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        });
+    </script>
+</head>
+
+<body id="page-top">
+
+<nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="../index.html">Back to Home</a>
+    </div>
+</nav>
+
+<header class="masthead bg-primary text-white text-center" style="padding: 9rem 0 3rem 0;">
+    <div class="container d-flex align-items-center flex-column">
+        <h1 class="masthead-heading text-uppercase mb-0">Lab 3</h1>
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
+        </div>
+        <p class="masthead-subheading font-weight-light mb-0">
+            Lab 3: Time of Flight Sensors
+        </p>
+    </div>
+</header>
+
+<section class="page-section" id="content">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-10">
+
+<h2 class="text-uppercase text-secondary mb-4">Lab 3: Overview</h2>
+
+<p class="lead" style="text-align: justify;">
+    The purpose of this lab is to equip the robot with distance sensors - the faster the robot can sample and the more it can trust a sensor reading, the faster it is able to drive.
+</p>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Prelab</h3>
+
+<h4 class="text-secondary mt-3 mb-2">I2C sensor address</h4>
+<p class="lead" style="text-align: justify;">
+    According to the datasheet, the Time-of-Flight (ToF) sensors are assigned a default 8-bit identifier of 0x52 (<code>0101 0010</code>).
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Using 2 ToF sensors</h4>
+<p class="lead" style="text-align: justify;">
+    The robot utilizes two ToF sensors to provide distance readings from multiple directions. Because both sensors share the same default I2C address, they can't be used simultaneously. To resolve this, the XSHUT pin of one sensor is connected to a GPIO pin on the Arduino. This allows the microcontroller to temporarily disable one sensor, reassign the I2C address of the active one via software, and then re-enable the second sensor, enabling independent communication with both.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Placement of Sensors</h4>
+<p class="lead" style="text-align: justify;">
+    The sensors are positioned at the front and right side of the robot to assist with obstacle detection. It is noted that the robot will have blind spots on the left and rear sides due to the current two-sensor limitation.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Wiring Diagram</h4>
+<p class="lead" style="text-align: justify;">
+    The diagram below illustrates the integrated wiring for the IMU and the two ToF sensors.
+</p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-0_1.jpg" style="max-width: 50%;" alt="Wiring Diagram" />
+</div>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Lab Tasks</h3>
+
+<h4 class="text-secondary mt-3 mb-2">Connection</h4>
+<p class="lead" style="text-align: justify;">
+    The ToF sensors are connected to the Arduino using the I2C protocol. The SDA and SCL lines are shared between the sensors, while the XSHUT pin of one sensor is connected to a GPIO pin for address management. And I tested that when the board is powered by the battery, it still can get connection with my computer through Bluetooth. 
+</p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-connection.jpg" style="max-width: 50%;" alt="Connection" />
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">I2C Device Scanning</h4>
+<p class="lead" style="text-align: justify;">
+    During initial testing, the output identified the sensors at address <strong>0x29</strong>. This occurs because the Arduino I2C library utilizes 7-bit addressing, shifting the 8-bit value right by one bit (<code>010 1001</code>). The successful detection of this address confirms that the connections and communication are functioning correctly.
+</p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-i2c-scanning.png" style="max-width: 50%;" alt="I2C Device Scanning" />
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">Sensor Data for Chosen Mode</h4>
+<p class="lead" style="text-align: justify;">
+    I selected Short Mode for initial distance measurements. Given the robot’s compact dimensions, Short Mode’s 1.3m detection range is sufficient for localized navigation. Furthermore, Short Mode is more stable to ambient light interference, providing higher data reliability. If future experiments involve larger environments with controlled lighting, the system can be reconfigured to Long Mode for extended real-time data collection.
+</p>
+<p class="lead" style="text-align: justify;">
+    I have characterized the sensor performance across various distances using this mode to establish a baseline for accuracy.
+</p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-short-mode.png" style="max-width: 50%;" alt="Short Mode Data" />
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">2 ToF Sensor Parallel</h4>
+<p class="lead" style="text-align: justify;">
+    Using the XSHUT hardware addressing method, both ToF sensors are initialized during the <code>setup()</code> phase. This configuration allows for simultaneous data streaming from both sensors, which can be monitored in real-time in the Serial Monitor.
+</p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-parallel.png" style="max-width: 80%;" alt="2 ToF Sensor Parallel" />
+</div>
+
+<p class="lead" style="text-align: justify;">
+    Then I conducted a test using Bluetooth communication for command transmission and data transmission. When measuring fixed distances with both sensors simultaneously, the data demonstrated high precision and consistency. This confirms that the dual-sensor setup will provide accurate feedback for the robot.
+</p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-accuracy.png" style="max-width: 60%;" alt="Bluetooth Communication" />
+</div>
+
+
+<h4 class="text-secondary mt-3 mb-2">ToF Sensor Speed</h4>
+<p class="lead" style="text-align: justify;">
+    To evaluate the ToF sensor speed, I used <code>if</code> statements to check for new data availability. By tracking the number of successful reads within a one-secon and monitoring the total <code>loop()</code> iterations, I determined that the effective sampling frequency is approximately 10 Hz. I think the 10 Hz frequency is primarily limited by the sensor's internal timing budget and the I2C bus overhead. While the microcontroller executes the main loop much faster, the sensor requires a specific period to maintain accuracy in detection. In the image, I presented the code part and output of the frequency of sensors.
+</p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-speed.png" style="max-width: 90%;" alt="ToF Sensor Speed" />
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">ToF and IMU</h4>
+<p class="lead" style="text-align: justify;">
+    To analyze the synchronization between different sensors, I implemented a buffering strategy for data collection. In this setup, the robot records approximately 4 seconds of data from both the ToF and IMU sensors into local memory. Once the sampling period is complete, the buffered data is transmitted via Bluetooth to a Python workstation for visualization and offline analysis.
+</p>
+<p class="lead" style="text-align: justify;">
+    During a representative 4-second capture window, I recorded approximately 40 data points from the ToF sensors and 800 data points from the IMU. The experimental results and sensor speed analysis are fully consistent with our expectations. The established communication successfully facilitates stable data acquisition from both the ToF and IMU sensors.
+</p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-tof-imu-speed.png" style="max-width: 60%;" alt="ToF and IMU Speed" />
+</div>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-tof-imu.png" style="max-width: 80%;" alt="ToF and IMU Synchronization" />
+</div>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Additional tasks for 5000-level</h3>
+
+<h4 class="text-secondary mt-3 mb-2">Discussion on infrared transmission based sensors</h4>
+
+
+<ul class="lead" style="text-align: justify;">
+    <li>
+        <strong>Amplitude-based IR Sensor</strong><br>
+        In class lecture, we mentioned Amplitude-based IR Sensor, which is very cheap and simple circuitry. They emit a burst of IR light and measure the amplitude of the light that bounces back. This sensor is very low cost and has very high sampling frequency. But the color of objective or ambient light can easily affect the accuracy, and it can't provide an absolute distance in millimeters.
+    </li>
+    <li class="mt-2">
+        <strong>Time-of-Flight (ToF) Sensors</strong><br>
+        This measures the elapsed time it takes for individual signal to travel to the target and back. This sensor provides reliable actual millimeter distance readings and it is insensitive to texture color and ambient light. However, in my case, the sampling rate of this sensor is relatively lower than other sensors, which means that it should take timing budget to collect enough singal to get the distance.
+    </li>
+</ul>
+
+
+<h4 class="text-secondary mt-3 mb-2">Sensitivity of sensors to colors and textures</h4>
+<p class="lead" style="text-align: justify;">
+    To evaluate the sensor's robustness, I measured four distinct materials at a fixed distance of 200mm. Due to potential misalignments from manual positioning, these results are treated as a qualitative reference rather than absolute calibration data. The materials tested included white paper, rough black leather, smooth grey leather, and green woven fabric. The black leather exhibited the most significant measurement error, because it absorb much of the light. Overall, the measurements remained within a predictable range, confirming that the ToF provides a reliable distance feedback.
+</p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-color-texture.png" style="max-width: 60%;" alt="Sensitivity to Colors and Textures" />
+</div>
+
+<h3 class="text-secondary mt-4 mb-3">Reference</h3>
+<p class="lead" style="text-align: justify;">
+    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Katherine Hsu's and Wenyi Fu's websites as guidance and as references for web design. I used Nano Banana Pro to help me with generating the cover of my lab, which is shown in the home page.
+</p>
+<h4 class="text-secondary mt-4 mb-3">Note</h4>
+<p class="lead" style="text-align: justify;">
+    In the report, I did not put some code implementations of simple functions and roughly duplicate parts. If necessary, please feel free to contact me.
+</p>
+
+<div class="text-center mt-5">
+    <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
