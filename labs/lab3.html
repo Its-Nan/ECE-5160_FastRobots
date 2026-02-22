@@ -117,6 +117,9 @@
     I have characterized the sensor performance across various distances using this mode to establish a baseline for accuracy.
 </p>
 <div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-short-mode-code.png" style="max-width: 60%;" alt="Short Mode Code" />
+</div>
+<div class="text-center mt-4">
     <img class="img-fluid" src="lab3_image/lab3-short-mode.png" style="max-width: 50%;" alt="Short Mode Data" />
 </div>
 
@@ -124,6 +127,9 @@
 <p class="lead" style="text-align: justify;">
     Using the XSHUT hardware addressing method, both ToF sensors are initialized during the <code>setup()</code> phase. This configuration allows for simultaneous data streaming from both sensors, which can be monitored in real-time in the Serial Monitor.
 </p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-parallel-code.png" style="max-width: 60%;" alt="2 ToF Sensor Parallel Code" />
+</div>
 <div class="text-center mt-4">
     <img class="img-fluid" src="lab3_image/lab3-parallel.png" style="max-width: 80%;" alt="2 ToF Sensor Parallel" />
 </div>
@@ -138,8 +144,11 @@
 
 <h4 class="text-secondary mt-3 mb-2">ToF Sensor Speed</h4>
 <p class="lead" style="text-align: justify;">
-    To evaluate the ToF sensor speed, I used <code>if</code> statements to check for new data availability. By tracking the number of successful reads within a one-secon and monitoring the total <code>loop()</code> iterations, I determined that the effective sampling frequency is approximately 10 Hz. I think the 10 Hz frequency is primarily limited by the sensor's internal timing budget and the I2C bus overhead. While the microcontroller executes the main loop much faster, the sensor requires a specific period to maintain accuracy in detection. In the image, I presented the code part and output of the frequency of sensors.
+    To evaluate the ToF sensor speed, I used <code>if</code> statements to check for new data availability. By tracking the number of successful reads within a one-second and monitoring the total <code>loop()</code> iterations, I determined that the effective sampling frequency is approximately 10 Hz. I think the 10 Hz frequency is primarily limited by the sensor's internal timing budget and the I2C bus overhead. While the microcontroller executes the main loop much faster, the sensor requires a specific period to maintain accuracy in detection. In the image, I presented the code part and output of the frequency of sensors.
 </p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-speed-code.png" style="max-width: 70%;" alt="ToF Sensor Speed Code" />
+</div>
 <div class="text-center mt-4">
     <img class="img-fluid" src="lab3_image/lab3-speed.png" style="max-width: 90%;" alt="ToF Sensor Speed" />
 </div>
@@ -149,8 +158,14 @@
     To analyze the synchronization between different sensors, I implemented a buffering strategy for data collection. In this setup, the robot records approximately 4 seconds of data from both the ToF and IMU sensors into local memory. Once the sampling period is complete, the buffered data is transmitted via Bluetooth to a Python workstation for visualization and offline analysis.
 </p>
 <p class="lead" style="text-align: justify;">
-    During a representative 4-second capture window, I recorded approximately 40 data points from the ToF sensors and 800 data points from the IMU. The experimental results and sensor speed analysis are fully consistent with our expectations. The established communication successfully facilitates stable data acquisition from both the ToF and IMU sensors.
+    During a 4-second capture window, I recorded approximately 40 data points from the ToF sensors and 800 data points from the IMU. The experimental results and sensor speed analysis are fully consistent with our previous expectations. The established communication successfully facilitates stable data acquisition from both the ToF and IMU sensors.
 </p>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-tof-imu-code.png" style="max-width: 70%;" alt="ToF and IMU Code" />
+</div>
+<div class="text-center mt-4">
+    <img class="img-fluid" src="lab3_image/lab3-tof-imu-python.png" style="max-width: 70%;" alt="ToF and IMU Python" />
+</div>
 <div class="text-center mt-4">
     <img class="img-fluid" src="lab3_image/lab3-tof-imu-speed.png" style="max-width: 60%;" alt="ToF and IMU Speed" />
 </div>
