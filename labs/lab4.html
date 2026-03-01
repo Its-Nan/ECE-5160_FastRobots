@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Lab 4 - ECE 5160 Fast Robots</title>
+
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" />
+
+    <link href="../css/styles.css" rel="stylesheet" />
+</head>
+
+<body id="page-top">
+
+<nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="../index.html">Back to Home</a>
+    </div>
+</nav>
+
+<header class="masthead bg-primary text-white text-center" style="padding: 9rem 0 3rem 0;">
+    <div class="container d-flex align-items-center flex-column">
+        <h1 class="masthead-heading text-uppercase mb-0">Lab 4</h1>
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
+        </div>
+        <p class="masthead-subheading font-weight-light mb-0">
+            Lab 4: Motors and Open Loop Control
+        </p>
+    </div>
+</header>
+
+<section class="page-section" id="content">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-10">
+
+<h2 class="text-uppercase text-secondary mb-4">Lab 4 Overview</h2>
+<p class="lead" style="text-align: justify;">
+    The purpose of this lab is for us to change from manual to open loop control of the car. At the end of this lab, our car should be able to execute a pre-programmed series of moves, using the Artemis board and two dual motor drivers.
+</p>
+
+<h3 class="text-secondary mt-4 mb-3">Prelab</h3>
+
+<h4 class="text-secondary mt-3 mb-2">Wiring diagram</h4>
+<p class="lead" style="text-align: justify;">
+    The wiring diagram for the motor driver connection is shown below. Separate batteries are used for the Artemis board and the motor driver.
+</p>
+<div class="text-center">
+    <img src="lab4_image/wiring_diagram.png" alt="Wiring Diagram" class="img-fluid" style="max-width: 80%;">
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">Battery discussion</h4>
+<p class="lead" style="text-align: justify;">
+    Two batteries are used in this lab because the motor driver and the microcontroller require independent power supplies with separate ground references to ensure stable operation and protect the sensors. During operation, the motors introduce noise that can cause voltage and current fluctuations. Using separate batteries provides a stable working environment for the Artemis while also ensuring relatively stable output power for the motors.
+</p>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Lab Tasks</h3>
+
+<h4 class="text-secondary mt-3 mb-2">Oscilloscope testing</h4>
+<p class="lead" style="text-align: justify;">
+    Before soldering the motor driver to the motors, I tested the signal output of the driver using an oscilloscope. An external power supply was connected to the VIN and GND pins of the motor driver, while the Artemis board was connected to the computer. PWM signals were generated using commands such as <code>analogWrite(AB1IN_RIGHT, 60)</code> and <code>analogWrite(AB2IN_RIGHT, 0)</code>. The output waveforms were observed on the oscilloscope. I tested PWM values of 63 and 100. The results show that a value of 63 corresponds to a 25% duty cycle, and the duty cycle at 100 also matches the expectation.
+</p>
+
+<div class="row text-center">
+    <div class="col-md-6">
+        <img src="lab4_image/oscilloscope_1.jpg"
+             alt="Oscilloscope Testing"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+    <div class="col-md-6">
+        <img src="lab4_image/oscilloscope_2.jpg"
+             alt="Oscilloscope Testing"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">Wheels spinning</h4>
+<p class="lead" style="text-align: justify;">
+    The motor driver output pins were then connected to the motors, and PWM signals were applied to drive the motors, successfully achieving wheel spinning.
+</p>
+<div class="text-center">
+    <img src="lab4_image/wheel_spin_code.png" alt="Oscilloscope Waveform" class="img-fluid" style="max-width: 60%;">
+</div>
+
+<div class="video-block mx-auto" style="max-width: 70%;">
+<div class="ratio ratio-16x9 shadow">
+    <iframe 
+        src="https://www.youtube.com/embed/4ojlX7dX_jQ" 
+        frameborder="0" 
+        allowfullscreen>
+    </iframe>
+</div>
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">All components arrangement</h4>
+<p class="lead" style="text-align: justify;">
+    After completing the overall wiring, only the motor drivers were fixed in place for initial testing.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Both wheels spinning</h4>
+<p class="lead" style="text-align: justify;">
+    Both motors were powered using a battery and tested to rotate simultaneously. A video demonstrating this behavior is shown below.
+</p>
+<div class="text-center">
+    <img src="lab4_image/both_spin_code.png" alt="Oscilloscope Waveform" class="img-fluid" style="max-width: 70%;">
+</div>
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/IZUx1sbYhKE"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">Lower limit PWM value</h4>
+<p class="lead" style="text-align: justify;">
+    In this section, I tested the minimum PWM value required to move the robot. Due to static friction at startup, a higher PWM value is required to initiate motion. Through testing, I found that a PWM value of 30 allows the robot to start moving. When smaller initial values were used, the robot couldn't start from rest.
+</p>
+<p class="lead" style="text-align: justify;">
+    The code is similar to the one used for both wheels spinning, but with a loop that decreases the PWM value to find the threshold for motion, which is 30 in this case.
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/7SWfawJJRJw"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">Calibration</h4>
+<p class="lead" style="text-align: justify;">
+    During initial testing, the robot didn't move in a straight line when commanded to move forward and instead drifted to the left. This indicates that the right wheel rotates faster than the left wheel. A scaling factor was introduced to adjust the PWM value of the left motor. After tuning this factor, the robot was able to move forward in a straight line.
+</p>
+<p class="lead" style="text-align: justify;">
+    Code in open loop control contained the calibration factor for the motors.
+</p>
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/XlkIlbSsdHw"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">Open loop control</h4>
+<p class="lead" style="text-align: justify;">
+    Four open-loop motions were tested: forward, backward, left turn, and right turn. As shown in the video, the robot successfully performed all motions. It was observed that higher PWM values were required for left and right turns compared to forward and backward motion. This is likely due to increased friction during turning compared to straight-line motion.
+</p>
+<div class="text-center">
+    <img src="lab4_image/open_loop_code.png" alt="Oscilloscope Waveform" class="img-fluid" style="max-width: 70%;">
+</div>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/vfw_oVECwtY"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Additional tasks for 5000-level</h3>
+
+<h4 class="text-secondary mt-3 mb-2">analogWrite frequency</h4>
+<p class="lead" style="text-align: justify;">
+    From the oscilloscope measurements, the frequency generated by analogWrite was observed. The time interval between signals is approximately 5 ms, corresponding to a frequency of about 200 Hz.
+    A frequency of 200 Hz is relatively low for DC motors and may result in insufficient torque during turning. Increasing the PWM frequency could produce smoother signals and overcome static friction during turning. However, in this lab, the PWM frequency was not manually adjusted, and the default frequency still produced acceptable results.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Lowest PWM value speed</h4>
+<p class="lead" style="text-align: justify;">
+    Unlike the above case, the static friction during startup is greater than the friction during motion. The PWM value was initially set to 32 and then decreased by 2 each time, with an LED blinking to indicate each decrement. After four LED blinks, the robot stopped moving. Therefore, the minimum PWM value required to maintain motion was determined to be 24.
+</p>
+<div class="text-center">
+    <img src="lab4_image/lowest_pwm_code.png" alt="Oscilloscope Waveform" class="img-fluid" style="max-width: 70%;">
+</div>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/k9eCc3_-NXc"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<h3 class="text-secondary mt-4 mb-3">Reference</h3>
+<p class="lead" style="text-align: justify;">
+    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Wenyi Fu's website as guidance and as references for web design. I used Nano Banana Pro to help me with generating the cover of my lab, which is shown in the home page.
+</p>
+<h4 class="text-secondary mt-4 mb-3">Note</h4>
+<p class="lead" style="text-align: justify;">
+    In the report, I did not put some code implementations of simple functions and roughly duplicate parts. If necessary, please feel free to contact me.
+</p>
+
+<div class="text-center mt-5">
+    <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
