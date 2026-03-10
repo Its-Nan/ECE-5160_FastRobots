@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Lab 5 - ECE 5160 Fast Robots</title>
+
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" />
+
+    <link href="../css/styles.css" rel="stylesheet" />
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        });
+    </script>
+</head>
+
+<body id="page-top">
+
+<nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="../index.html">Back to Home</a>
+    </div>
+</nav>
+
+<header class="masthead bg-primary text-white text-center" style="padding: 9rem 0 3rem 0;">
+    <div class="container d-flex align-items-center flex-column">
+        <h1 class="masthead-heading text-uppercase mb-0">Lab 5</h1>
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
+        </div>
+        <p class="masthead-subheading font-weight-light mb-0">
+            Lab 5: Linear PID control and Linear interpolation
+        </p>
+    </div>
+</header>
+
+<section class="page-section" id="content">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-10">
+
+<h2 class="text-uppercase text-secondary mb-4">Lab 5 Overview</h2>
+
+<h3 class="text-secondary mt-4 mb-3">Objective</h3>
+<p class="lead" style="text-align: justify;">
+    The purpose of this lab is to gain experience with PID control.
+</p>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Prelab</h3>
+<p class="lead" style="text-align: justify;">
+    To make data collection, plotting, and post-processing easier on the Python side, I used an approach similar to the previous labs. I defined arrays of length 600 to store time, ToF distance, system output, and the individual P, I, and D terms. During runtime, the data was stored in these arrays, and after the experiment finished, it was transmitted to the computer through BLE for further analysis.
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/prelab.png" alt="Prelab Data Storage" class="img-fluid" style="max-width: 30%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    I also implemented a function that allows PID parameters and the target distance to be updated in real time. This made PID tuning much more convenient in the later experiments. In addition, based on the results from the previous lab, I added a calibration factor so that the robot could move forward and backward as straight as possible.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    Since this lab only involved forward and backward motion, I implemented separate <code>forward</code>, <code>backward</code>, and <code>stop</code> functions, along with the PID function. In the command handler, I only needed to call the corresponding function for each case. This design also improved the maintainability of the code, making later debugging and modification much easier.
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/prelab2.png" alt="Prelab Function Design" class="img-fluid" style="max-width: 40%;">
+</div>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Lab Tasks</h3>
+
+<h4 class="text-secondary mt-3 mb-2">PID Discussion</h4>
+<p class="lead" style="text-align: justify;">
+    A PID controller consists of three parts: proportional, integral, and derivative control, and its output can be written as
+</p>
+
+<p class="lead text-center" style="font-size: 1.05rem;">
+    $$u(t) = K_p e(t) + K_i \int_0^t e(\tau), d\tau + K_d \frac{de(t)}{dt}$$
+</p>
+
+<p class="lead" style="text-align: justify;">
+    where <code>(e(t))</code> is the error between the target value and the measured value, and <code>(u(t))</code> is the control output.
+</p>
+
+<ul class="lead" style="text-align: justify;">
+    <li><code>(K_p)</code> provides a correction proportional to the current error, allowing the system to respond quickly.</li>
+    <li><code>(K_i)</code> accumulates past errors and helps reduce steady-state error.</li>
+    <li><code>(K_d)</code> responds to the rate of change of the error and helps reduce overshoot and oscillation.</li>
+</ul>
+
+<h4 class="text-secondary mt-3 mb-2">Range / Sampling Time Discussion</h4>
+<p class="lead" style="text-align: justify;">
+    For the ToF sensor, I used the same sampling approach as in the previous lab and did not change the default sampling method:
+</p>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/sampling.png" alt="ToF Sampling" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    Based on the current experimental results, the sampling frequency was sufficient for PID control. In addition, since extrapolation was later used to estimate distance, the resulting distance curve could still be made smoother. If a different ToF sampling frequency is needed in future experiments, it can be adjusted in the setup stage:
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/sampling2.png" alt="ToF Sampling Adjustment" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    I also tested different sampling rates during the extrapolation section. However, for this lab, a frequency around 10 Hz was already sufficient for basic PID control.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Implementation</h4>
+<p class="lead" style="text-align: justify;">
+    In the PID implementation, I adjusted the controller output based on different robot states, following the tips and tricks from the lab as well as initialization considerations.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    For example, when the error falls within a defined tolerance range, I set the controller output to zero. This allows the robot to stop more smoothly near the target and also helps clear the accumulated integral error.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    In addition, since <code>prev_err</code> is initially zero, directly computing the derivative term at startup may produce a large output. To avoid this, I first computed the error and initialized <code>prev_err</code> to that same value, which reduced the large initial derivative spike and improved stability.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    From the previous lab, I also knew the minimum PWM required to move the robot. Therefore, when the error was still relatively large but the PID output was below 40, I forced the output to 40 so that the robot would not stop before reaching the target.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    For safety, I also limited the maximum PWM output to 200. Because the calibration factor makes one motor output larger than the other, setting the upper limit too close to 255 could make straight motion less stable. With the limit set to 200, the robot still moved quickly while maintaining stable behavior.
+</p>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/pid_code.png" alt="PID Implementation" class="img-fluid" style="max-width: 100%;">
+</div>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/pid_code2.png" alt="PID Command Handling" class="img-fluid" style="max-width: 90%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    Overall, this was the main control logic. On the Python side, I modified the payload sent over BLE to tune the PID parameters. After collecting the data, I used plotting functions to observe the distance to the wall, the controller output, and the individual P, I, and D terms.
+</p>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/python_plot.png" alt="PID Plotting" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    I tested three different sets of PID parameters:
+</p>
+
+<ul class="lead" style="text-align: justify;">
+    <li><code>(0.2, 0.01, 0.08)</code>, target distance <code>(304)</code></li>
+    <li><code>(0.4, 0.02, 0.1)</code>, target distance <code>(400)</code></li>
+    <li><code>(0.4, 0.02, 0.15)</code>, target distance <code>(304)</code></li>
+</ul>
+
+<p class="lead" style="text-align: justify;">
+    Here, the first three values correspond to <code>(K_p)</code>, <code>(K_i)</code>, and <code>(K_d)</code>, and the last value is the target distance. The collected data and videos show that the robot could achieve stable behavior under PID control. From the plots, one set of parameters produced a small overshoot before settling back to the target distance.
+</p>
+<p class="lead" style="text-align: justify;">
+    The results for $K_p = 0.2$, $K_i = 0.01$, and $K_d = 0.08$ are shown below. The robot was able to reach the target distance, and the controller output showed a typical PID response with the P term dominating at the beginning, followed by the I term accumulating over time, and the D term responding to the initial error change.
+</p>
+
+<div class="row text-center mt-4 mb-4">
+    
+    <div class="col-md-4">
+        <img src="lab5_image/pid1_dist.png"
+             alt="PID Result"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab5_image/pid1_u.png"
+             alt="PID Output"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab5_image/pid1_pid.png"
+             alt="PID Terms"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+</div>
+
+<p class="lead" style="text-align: justify;">
+    The results for $K_p = 0.4$, $K_i = 0.02$, and $K_d = 0.1$ are shown below. The robot reached the target distance with a slightly overshoot.
+</p>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/_r8CSEPgESU"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<div class="row text-center mt-4 mb-4">
+    
+    <div class="col-md-4">
+        <img src="lab5_image/pid2_dist.png"
+             alt="PID Result"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab5_image/pid2_u.png"
+             alt="PID Output"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab5_image/pid2_pid.png"
+             alt="PID Terms"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+</div>
+
+
+
+<p class="lead" style="text-align: justify;">
+    The results for $K_p = 0.4$, $K_i = 0.02$, and $K_d = 0.15$ are shown below. The robot reached the target distance without overshoot because we increased the derivative gain. So the D term provided more damping to the system, which reduced the overshoot and allowed the robot to settle at the target distance more smoothly.
+</p>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/NJV1bwe0Ey8"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<div class="row text-center mt-4 mb-4">
+    
+    <div class="col-md-4">
+        <img src="lab5_image/pid3_dist.png"
+             alt="PID Result"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab5_image/pid3_u.png"
+             alt="PID Output"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab5_image/pid3_pid.png"
+             alt="PID Terms"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+</div>
+
+
+
+<p class="lead" style="text-align: justify;">
+    I also tested disturbing the robot after it had already reached the target. The robot was still able to return to the desired position, which further demonstrated the stability of the PID controller.
+</p>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/-ietavSJF2U"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<p class="lead" style="text-align: justify;">
+     Then I computed the speed of the robot during the motion. It can really reach a very high speed at one moment and reach the target immediately. The maximum speed was around 6.975 m/s, but it would be not very precise because the time interval between two valid ToF measurements was around 0.1s, which was not very small. So the speed estimation could be quite noisy and inaccurate. However, it still showed that the robot could move very fast under PID control.
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/distance.png" alt="Robot Speed" class="img-fluid" style="max-width: 50%;">    
+</div>
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/speed.png" alt="Robot Speed" class="img-fluid" style="max-width: 50%;">    
+</div>
+
+
+<h4 class="text-secondary mt-3 mb-2">Extrapolation</h4>
+<p class="lead" style="text-align: justify;">
+    In this part, I implemented extrapolation based on estimated velocity. Using two valid ToF measurements, I computed the robot’s velocity over that interval. Once two valid samples were available, I set a flag <code>have_two</code> to true.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    The velocity was estimated from two consecutive valid measurements as
+</p>
+
+<p class="lead text-center" style="font-size: 1.05rem;">
+    $$v = \frac{d_2 - d_1}{t_2 - t_1} \notag$$
+</p>
+
+<p class="lead" style="text-align: justify;">
+    where <code>(d_1)</code> and <code>(d_2)</code> are two consecutive distance measurements, and <code>(t_1)</code> and <code>(t_2)</code> are their corresponding timestamps. Based on this estimated velocity, the extrapolated distance at the current time was computed as
+</p>
+
+<p class="lead text-center" style="font-size: 1.05rem;">
+    $$d_{\text{est}}(t) = d_2 + v (t - t_2) \notag$$
+</p>
+
+<p class="lead" style="text-align: justify;">
+    where <code>(t)</code> is the current time before the next valid ToF measurement arrives.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    After that, I continuously updated the current time <code>now</code>, while <code>t2</code> was only updated when a new ToF measurement arrived. Therefore, before the next ToF update was received, I assumed the robot continued moving at the previously estimated velocity and extrapolated the distance to the current time.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    When a new ToF measurement became available, I shifted the stored values and updated <code>t2</code> and <code>d2</code> with the newest data. This allowed the extrapolated estimate to be updated dynamically over time.
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/extrapolation_code.png" alt="Extrapolation Logic" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/3FzN6sMKt3E"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<div class="row text-center mt-4 mb-4">
+    
+    <div class="col-md-4">
+        <img src="lab5_image/extra_dist.png"
+             alt="Extrapolation Result"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab5_image/extra_u.png"
+             alt="Extrapolation Output"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab5_image/extra_pid.png"
+             alt="Extrapolation Terms"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+</div>
+
+
+<p class="lead" style="text-align: justify;">
+    I also counted both the PID update rate and the valid ToF update rate. The PID loop ran at about 106 Hz. And the ToF update rate was around 10 Hz, which was consistent with the previous lab. This meant that the extrapolation was providing estimates at a much higher frequency than the raw ToF measurements, which could help improve the responsiveness of the PID controller.
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/update_rate.png" alt="Update Rates" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    To further evaluate this method, I increased the ToF sampling frequency and compared it with the previous setting. The new ToF measurements became denser, and the corresponding sampling frequency was about 40 Hz. At the same time, the extrapolated curve became smoother.
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/extrapolation_comparison.png" alt="Extrapolation Comparison" class="img-fluid" style="max-width: 50%;">
+</div>
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/extrapolation_comparison2.png" alt="Extrapolation Comparison 2" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<h4 class="text-secondary mt-3 mb-2">Wind-up Protection</h4>
+<p class="lead" style="text-align: justify;">
+    In this section, I implemented integral wind-up protection by limiting the accumulated integral term.
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab5_image/windup_code.png" alt="Wind-up Protection Logic" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    I also performed a comparison experiment to show its effect. Without integral protection, the robot accumulated too much integral error during motion and collided with the wall. After applying wind-up protection, the robot was able to avoid hitting the wall. This demonstrated that integral protection is necessary in this control task.
+</p>
+<p class="lead" style="text-align: justify;">
+     The results without wind-up protection are shown below. The robot overshot the target distance and collided with the wall due to the accumulated integral error.
+</p>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/AhGEPI8x5PA"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<p class="lead" style="text-align: justify;">
+    The results with wind-up protection are shown below. The robot reached the target distance without overshooting and avoided colliding with the wall, demonstrating the effectiveness of the integral wind-up protection.
+</p>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/FYTwBNsVBfU"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+
+<h3 class="text-secondary mt-4 mb-3">Reference</h3>
+<p class="lead" style="text-align: justify;">
+    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Wenyi Fu's and Trevor's websites as guidance and as references for web design. I used Nano Banana Pro to help me with generating the cover of my lab, which is shown in the home page.
+</p>
+<h4 class="text-secondary mt-4 mb-3">Note</h4>
+<p class="lead" style="text-align: justify;">
+    In the report, I did not put some code implementations of simple functions and roughly duplicate parts. If necessary, please feel free to contact me.
+</p>
+
+<div class="text-center mt-5">
+    <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
