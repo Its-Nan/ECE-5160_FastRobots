@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Lab 6 - ECE 5160 Fast Robots</title>
+
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" />
+
+    <link href="../css/styles.css" rel="stylesheet" />
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        });
+    </script>
+</head>
+
+<body id="page-top">
+
+<nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="../index.html">Back to Home</a>
+    </div>
+</nav>
+
+<header class="masthead bg-primary text-white text-center" style="padding: 9rem 0 3rem 0;">
+    <div class="container d-flex align-items-center flex-column">
+        <h1 class="masthead-heading text-uppercase mb-0">Lab 6</h1>
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
+        </div>
+        <p class="masthead-subheading font-weight-light mb-0">
+            Lab 6: Orientation PID Control
+        </p>
+    </div>
+</header>
+
+<section class="page-section" id="content">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-10">
+
+<h3 class="text-secondary mt-4 mb-3">Prelab</h3>
+<p class="lead" style="text-align: justify;">
+    In this part, I followed a similar approach to the previous PID control lab. I again used arrays to store the relevant orientation state data for easier observation and post-processing.
+</p>
+<div class="text-center mt-4 mb-4">
+    <img class="img-fluid" src="lab6_image/storage.png" alt="Prelab Data" style="max-width: 30%; height: auto;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    For data transmission, I also used a similar strategy as before. The Python side sends the PID parameters and target angle to configure the controller.
+</p>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-4 mb-3">Lab Tasks</h3>
+
+<h4 class="text-secondary mt-3 mb-2">Implementation</h4>
+<p class="lead" style="text-align: justify;">
+    In this part, I used the gyroscope yaw angle to estimate the robot’s orientation. Following the lab guidance, I used the DMP to measure the rotation angle. The initialization and main data collection process are shown in the code.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    To improve control accuracy, I kept the robot still for a short time at the beginning of the program to collect data for calibration. By subtracting this bias during later computation, the orientation estimate became more accurate.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    Using the DMP output, I obtained the current angle of the robot. The error was then used to compute the proportional term and accumulate the integral term. For the derivative term, instead of differentiating the angle, I directly used the gyroscope reading. This provides angular velocity directly and avoids additional noise caused by numerical differentiation. I also applied integral wind-up protection by clamping the integral term within a fixed range. In addition, I set both minimum and maximum motor speeds, since spinning in place usually requires a larger PWM output than straight motion.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">PID discussion</h4>
+<p class="lead" style="text-align: justify;">
+    I tried many combinations of PID parameters. In this lab, I used a relatively large proportional gain because orientation correction requires the robot to spin, which needs a stronger control output. I wanted the robot to respond quickly when the initial error was large or when disturbances. Since I already limited the maximum and minimum motor speed, I believe this choice helped the robot reach the target angle faster. After that, I further tuned the integral and derivative terms to achieve more stable and accurate control.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    Unlike the previous lab, this PID controller needed to run while still receiving BLE commands. To achieve this, I introduced several flags to control whether PID should start and whether initialization had been completed. In this way, the main loop only needed to update the PID controller continuously, while still allowing the Arduino to process incoming BLE commands from the computer.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    I also included the PID control code, the data transmission code, and the corresponding command-case implementation. A flag was used to determine whether the parameters had been initialized successfully and whether the command had been received correctly. After that, the PID controller could be updated continuously in the main loop.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Multi-Direction Control</h4>
+<p class="lead" style="text-align: justify;">
+    Because the PID update was executed in the main loop, the robot could receive BLE commands in real time. This allowed me to send different commands to change the target angle, so the robot could rotate from its current orientation to a new desired direction.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Sampling Time</h4>
+<p class="lead" style="text-align: justify;">
+    After testing, I measured the sampling rate of this implementation to be about 57 Hz. Since the loop now had to handle more tasks and also receive BLE messages, the update rate became slower than the blocking implementation used in the previous lab, where the control loop ran directly inside the command case. However, from the experimental results, this update rate was still responsive enough for orientation control.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Wind-Up Protection</h4>
+<p class="lead" style="text-align: justify;">
+    Integral wind-up protection was implemented in the controller. In practice, because the proportional gain was relatively large, the robot usually reached the target quickly, so the integral term did not accumulate significantly. Still, I kept the wind-up protection in the implementation as a good habit.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Discussion</h4>
+<p class="lead" style="text-align: justify;">
+    In this lab, I implemented PID control for robot orientation. I think that both straight motion and rotational motion can involve relatively high speed, which may place stricter requirements on future experiments. More sensor fusion may also be needed later.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    In the previous lab, by adjusting the ToF settings in setup, I achieved a sampling rate of about 40 Hz for the ToF sensor. Combined with the results of this lab, I believe a control frequency around 50 Hz is already a reasonable and sufficiently responsive range. In future experiments, additional code and more data storage may further reduce the loop speed, which is an important factor to consider. A practical question for later work is what sampling rate is sufficiently safe and responsive when the robot is moving at higher speed and needs real-time feedback.
+</p>
+
+<div class="text-center mt-5">
+    <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
