@@ -76,10 +76,20 @@
 <p class="lead" style="text-align: justify;">
     In this part, I used the gyroscope yaw angle to estimate the robot’s orientation. Following the lab guidance, I used the DMP to measure the rotation angle. The initialization and main data collection process are shown in the code.
 </p>
+<div class="text-center mt-4 mb-4">
+    <img class="img-fluid" src="lab6_image/dmp_setup.png" alt="Implementation Code" style="max-width: 70%; height: auto;">
+</div>
+<div class="text-center mt-4 mb-4">
+    <img class="img-fluid" src="lab6_image/dmp_loop.png" alt="Implementation Code" style="max-width: 70%; height: auto;">
+</div>
 
 <p class="lead" style="text-align: justify;">
     To improve control accuracy, I kept the robot still for a short time at the beginning of the program to collect data for calibration. By subtracting this bias during later computation, the orientation estimate became more accurate.
 </p>
+
+<div class="text-center mt-4 mb-4">
+    <img class="img-fluid" src="lab6_image/calibration.png" alt="Calibration Data" style="max-width: 40%; height: auto;">
+</div>
 
 <p class="lead" style="text-align: justify;">
     Using the DMP output, I obtained the current angle of the robot. The error was then used to compute the proportional term and accumulate the integral term. For the derivative term, instead of differentiating the angle, I directly used the gyroscope reading. This provides angular velocity directly and avoids additional noise caused by numerical differentiation. I also applied integral wind-up protection by clamping the integral term within a fixed range. In addition, I set both minimum and maximum motor speeds, since spinning in place usually requires a larger PWM output than straight motion.
@@ -89,24 +99,121 @@
 <p class="lead" style="text-align: justify;">
     I tried many combinations of PID parameters. In this lab, I used a relatively large proportional gain because orientation correction requires the robot to spin, which needs a stronger control output. I wanted the robot to respond quickly when the initial error was large or when disturbances. Since I already limited the maximum and minimum motor speed, I believe this choice helped the robot reach the target angle faster. After that, I further tuned the integral and derivative terms to achieve more stable and accurate control.
 </p>
+<div class="text-center mt-4 mb-4">
+    <img class="img-fluid" src="lab6_image/pid_code.png" alt="PID Tuning" style="max-width: 90%; height: auto;">
+</div>
 
 <p class="lead" style="text-align: justify;">
     Unlike the previous lab, this PID controller needed to run while still receiving BLE commands. To achieve this, I introduced several flags to control whether PID should start and whether initialization had been completed. In this way, the main loop only needed to update the PID controller continuously, while still allowing the Arduino to process incoming BLE commands from the computer.
 </p>
+<div class="text-center mt-4 mb-4">
+    <img class="img-fluid" src="lab6_image/flags.png" alt="Flags for Control Flow" style="max-width: 60%; height: auto;">
+</div>
 
 <p class="lead" style="text-align: justify;">
     I also included the PID control code, the data transmission code, and the corresponding command-case implementation. A flag was used to determine whether the parameters had been initialized successfully and whether the command had been received correctly. After that, the PID controller could be updated continuously in the main loop.
 </p>
+<div class="text-center mt-4 mb-4">
+    <img class="img-fluid" src="lab6_image/pid_update.png" alt="Command Case Implementation" style="max-width: 60%; height: auto;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    I tested many combinations of PID parameters. Here are some examples of the robot’s response with different parameters.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    The first set of parameters tested was Kp = 6.0, Ki = 1, Kd = 0.6, with a target angle of 90 degrees.
+</p>
+
+<div class="row text-center mt-4 mb-4">
+    
+    <div class="col-md-4">
+        <img src="lab6_image/pid1_deg.png"
+             alt="PID Result"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab6_image/pid1_u.png"
+             alt="PID Output"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab6_image/pid1_pid.png"
+             alt="PID Terms"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+</div>
+
+<p class="lead" style="text-align: justify;">
+    The second set of parameters tested was Kp = 6.0, Ki = 0.8 Kd = 0.8, with a target angle of 90 degrees.
+</p>
+
+<div class="row text-center mt-4 mb-4">
+    
+    <div class="col-md-4">
+        <img src="lab6_image/pid2_deg.png"
+             alt="PID Result"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab6_image/pid2_u.png"
+             alt="PID Output"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+
+    <div class="col-md-4">
+        <img src="lab6_image/pid2_pid.png"
+             alt="PID Terms"
+             class="img-fluid"
+             style="max-width: 100%;">
+    </div>
+</div>
+
+<p class="lead" style="text-align: justify;">
+    And this the video of the robot's response. The robot was able to reach the target angle of 90 degrees, and if I drag the robot away from the target, it could also return to the target angle. The response was relatively fast and stable, which shows that the PID controller was working well.
+</p>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/CzZsh9ERRAg"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
 
 <h4 class="text-secondary mt-3 mb-2">Multi-Direction Control</h4>
 <p class="lead" style="text-align: justify;">
     Because the PID update was executed in the main loop, the robot could receive BLE commands in real time. This allowed me to send different commands to change the target angle, so the robot could rotate from its current orientation to a new desired direction.
 </p>
 
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/8rQuhJrv_vE"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
 <h4 class="text-secondary mt-3 mb-2">Sampling Time</h4>
 <p class="lead" style="text-align: justify;">
     After testing, I measured the sampling rate of this implementation to be about 57 Hz. Since the loop now had to handle more tasks and also receive BLE messages, the update rate became slower than the blocking implementation used in the previous lab, where the control loop ran directly inside the command case. However, from the experimental results, this update rate was still responsive enough for orientation control.
 </p>
+
+<div class="text-center mt-4 mb-4">
+    <img class="img-fluid" src="lab6_image/sampling_time.png" alt="Sampling Time" style="max-width: 50%; height: auto;">
+</div>
 
 <h4 class="text-secondary mt-3 mb-2">Wind-Up Protection</h4>
 <p class="lead" style="text-align: justify;">
@@ -120,6 +227,15 @@
 
 <p class="lead" style="text-align: justify;">
     In the previous lab, by adjusting the ToF settings in setup, I achieved a sampling rate of about 40 Hz for the ToF sensor. Combined with the results of this lab, I believe a control frequency around 50 Hz is already a reasonable and sufficiently responsive range. In future experiments, additional code and more data storage may further reduce the loop speed, which is an important factor to consider. A practical question for later work is what sampling rate is sufficiently safe and responsive when the robot is moving at higher speed and needs real-time feedback.
+</p>
+
+<h3 class="text-secondary mt-4 mb-3">Reference</h3>
+<p class="lead" style="text-align: justify;">
+    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Wenyi Fu's, Trevor's and Evan Leong's websites as guidance and as references for web design. I used Nano Banana Pro to help me with generating the cover of my lab, which is shown in the home page. I used AI tools to help me with refining the writing and improving the clarity of my report.
+</p>
+<h4 class="text-secondary mt-4 mb-3">Note</h4>
+<p class="lead" style="text-align: justify;">
+    In the report, I did not put some code implementations of simple functions and roughly duplicate parts. If necessary, please feel free to contact me.
 </p>
 
 <div class="text-center mt-5">
