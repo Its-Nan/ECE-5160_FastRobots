@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Lab 7 - ECE 5160 Fast Robots</title>
+
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" />
+
+    <link href="../css/styles.css" rel="stylesheet" />
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        });
+    </script>
+</head>
+
+<body id="page-top">
+
+<nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="../index.html">Back to Home</a>
+    </div>
+</nav>
+
+<header class="masthead bg-primary text-white text-center" style="padding: 9rem 0 3rem 0;">
+    <div class="container d-flex align-items-center flex-column">
+        <h1 class="masthead-heading text-uppercase mb-0">Lab 7</h1>
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
+        </div>
+        <p class="masthead-subheading font-weight-light mb-0">
+            Lab 7 Kalman Filter
+        </p>
+    </div>
+</header>
+
+<section class="page-section" id="content">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-10">
+
+<h4 class="text-secondary mt-3 mb-2">Estimate Drag and Momentum</h4>
+<p class="lead" style="text-align: justify;">
+    We can model the robot's motion using a first-order system, where the velocity response to a step input can be described by an exponential curve. The parameters of this curve can be used to estimate the drag coefficient and momentum of the robot. To perform this estimation, I conducted an experiment where I applied a step input to the robot and recorded its velocity response over time.
+</p>
+<p class="equation">
+        $$F = ma = m\ddot{x}$$
+</p>
+
+<p class="lead" style="text-align: justify;">
+    In this process, the robot needed to reach a stable constant-speed state and travel a relatively long distance. Therefore, I switched the ToF sensor to <strong>Long Mode</strong>. A step input with $( u = 120 )$ was applied at $( t = 0.5 \text{s} )$, and the corresponding distance measurements were collected. After the experiment, the data were transmitted through BLE for further analysis.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    Following the approach from the reference website, I first computed the velocity at each sampled point, then fitted the velocity data with an exponential curve. The steady-state speed was estimated from the later portion of the curve where the response became stable. Based on the time and speed at which the response reached 90% of the steady-state value, I determined the 90% rise time and velocity. Using these values, I calculated the drag coefficient $( d )$ and momentum term $( m )$.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Initialize KF (Python)</h4>
+<p class="lead" style="text-align: justify;">
+    With the initial parameters estimated, I then implemented the Kalman filter. Based on the system definition, I computed the continuous-time matrices $( A )$ and $( B )$, and used the mean sampling interval $( \text{mean_dt} )$ from the collected data to obtain the discrete-time matrices $( A_d )$ and $( B_d )$.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    Next, following the formulas provided in the slides and the sampling rate, I calculated $( \sigma_1 )$ and $( \sigma_2 )$, which represent the confidence in the modeled position and velocity, respectively. I also set $( \sigma_3 = 20 )$, and used these values to construct the process noise covariance matrix $( \text{Sigma}\ u )$ and the measurement noise covariance matrix $( \text{Sigma}\ z )$. These were the initial settings, which were further tuned during later experiments.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Implement and Test the Kalman Filter in Jupyter (Python)</h4>
+<p class="lead" style="text-align: justify;">
+    Based on the full Kalman filter procedure and the lab instructions, I implemented the prediction and update steps in Python. After defining the initial state and covariance, I was able to apply the Kalman filter to the collected experimental data.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    I then tested several different sigma settings and compared the filtered results. The first set of results shown here corresponds to $( \sigma_1 = \sigma_2 = 32 )$ and $( \sigma_3 = 20 )$.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Implement the Kalman Filter on the Robot</h4>
+<p class="lead" style="text-align: justify;">
+    After validating the Kalman filter in Python, I integrated it into the Arduino code for PID control on the robot. From the resulting plots, it can be seen that the filtered curve becomes much smoother after applying the Kalman filter. In addition, I increased the sampling frequency in <strong>Short Mode</strong>, which produced more data points. This helped improve the measurement accuracy at short range and provided more precise feedback for control.
+</p>
+
+<div class="text-center mt-5">
+    <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
