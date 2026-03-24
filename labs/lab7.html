@@ -65,11 +65,94 @@
 </p>
 
 <p class="lead" style="text-align: justify;">
-    In this process, the robot needed to reach a stable constant-speed state and travel a relatively long distance. Therefore, I switched the ToF sensor to <strong>Long Mode</strong>. A step input with $( u = 120 )$ was applied at $( t = 0.5 \text{s} )$, and the corresponding distance measurements were collected. After the experiment, the data were transmitted through BLE for further analysis.
+    We add the linear drag force $(d)$ and motor input $(u)$,
+</p>
+
+<p class="equation" style="text-align: center;">
+    $$F = -d\dot{x} + u$$
 </p>
 
 <p class="lead" style="text-align: justify;">
+    Combining the two equations, we can derive that the dynamics of the system can be described in terms of second derivative of position
+</p>
+
+<p class="equation" style="text-align: center;">
+    $$\ddot{x} = -\frac{d}{m}\dot{x} + \frac{u}{m}$$
+</p>
+
+<p class="lead" style="text-align: justify;">
+    Then, we can represent the system in state space notation with the state vector
+</p>
+
+<p class="equation" style="text-align: center;">
+        $$x =
+        \begin{bmatrix}
+        x \\
+        \dot{x}
+        \end{bmatrix}$$
+</p>
+
+<p class="lead" style="text-align: justify;">
+    The corresponding dynamics in the state space form $\dot{x} = Ax + Bu$
+</p>
+
+<p class="equation" style="text-align: center;">
+        $$
+        \begin{bmatrix}
+        \dot{x} \\
+        \ddot{x}
+        \end{bmatrix}
+        =
+        \begin{bmatrix}
+        0 & 1 \\
+        0 & -d/m
+        \end{bmatrix}
+        \begin{bmatrix}
+        x \\
+        \dot{x}
+        \end{bmatrix}
+        +
+        \begin{bmatrix}
+        0 \\
+        1/m
+        \end{bmatrix} u
+        $$
+</p>
+
+<p class="lead" style="text-align: justify;">
+    For this system, the drag and momentum can be estimated as the following parameters covered in lecture
+</p>
+
+<p class="equation" style="text-align: center;">
+    $$d = \frac{u_{ss}}{\dot{x}_{ss}}$$
+</p>
+
+<p class="equation" style="text-align: center;">
+    $$m = \frac{-d \cdot t_{0.9}}{\ln(1-0.9)}$$
+</p>
+
+<p class="lead" style="text-align: justify;">
+    In this process, the robot needed to reach a stable constant-speed state and travel a relatively long distance. Therefore, I switched the ToF sensor to <strong>Long Mode</strong>. A step input with $( u = 120 )$ was applied at $( t = 0.5 \text{s} )$, and the corresponding distance measurements were collected. After the experiment, the data were transmitted through BLE for further analysis.
+</p>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab7_image/step_response.png" alt="Step Response" class="img-fluid" style="max-width: 80%;">
+</div>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab7_image/velocity_fit.png" alt="Velocity Fit" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
     Following the approach from the reference website, I first computed the velocity at each sampled point, then fitted the velocity data with an exponential curve. The steady-state speed was estimated from the later portion of the curve where the response became stable. Based on the time and speed at which the response reached 90% of the steady-state value, I determined the 90% rise time and velocity. Using these values, I calculated the drag coefficient $( d )$ and momentum term $( m )$.
+</p>
+
+<p class="equation" style="text-align: center;">
+    $$d = \frac{u_{ss}}{\dot{x}_{ss}} = \frac{1}{2632.42 mm/s} = 0.00037988$$
+</p>
+
+<p class="equation" style="text-align: center;">
+    $$m = \frac{-d \cdot t_{0.9}}{\ln(1-0.9)} = \frac{-0.00037988 s/mm \cdot 1.653 s}{\ln(0.1)} = 0.00027269$$
 </p>
 
 <h4 class="text-secondary mt-3 mb-2">Initialize KF (Python)</h4>
@@ -77,22 +160,112 @@
     With the initial parameters estimated, I then implemented the Kalman filter. Based on the system definition, I computed the continuous-time matrices $( A )$ and $( B )$, and used the mean sampling interval $( \text{mean_dt} )$ from the collected data to obtain the discrete-time matrices $( A_d )$ and $( B_d )$.
 </p>
 
+<div class="text-center mt-4 mb-4">
+    <img src="lab7_image/continuous-time-matrices.png" alt="Velocity Fit" class="img-fluid" style="max-width: 60%;">
+</div>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab7_image/discrete-time-matrices.png" alt="Velocity Fit" class="img-fluid" style="max-width: 50%;">
+</div>
+
+
 <p class="lead" style="text-align: justify;">
     Next, following the formulas provided in the slides and the sampling rate, I calculated $( \sigma_1 )$ and $( \sigma_2 )$, which represent the confidence in the modeled position and velocity, respectively. I also set $( \sigma_3 = 20 )$, and used these values to construct the process noise covariance matrix $( \text{Sigma}\ u )$ and the measurement noise covariance matrix $( \text{Sigma}\ z )$. These were the initial settings, which were further tuned during later experiments.
 </p>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab7_image/sigma_code.png" alt="Kalman Filter Procedure" class="img-fluid" style="max-width: 50%;">
+</div>
 
 <h4 class="text-secondary mt-3 mb-2">Implement and Test the Kalman Filter in Jupyter (Python)</h4>
 <p class="lead" style="text-align: justify;">
     Based on the full Kalman filter procedure and the lab instructions, I implemented the prediction and update steps in Python. After defining the initial state and covariance, I was able to apply the Kalman filter to the collected experimental data.
 </p>
 
+
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab7_image/kalman_code.png" alt="Kalman Filter Results" class="img-fluid" style="max-width: 60%;">
+</div>
+
 <p class="lead" style="text-align: justify;">
-    I then tested several different sigma settings and compared the filtered results. The first set of results shown here corresponds to $( \sigma_1 = \sigma_2 = 32 )$ and $( \sigma_3 = 20 )$.
+    I then tested several different sigma settings and compared the filtered results. The first set of results shown here corresponds to $( \sigma_1 = \sigma_2 = 32 )$, which is computed by $\sqrt{\frac{100}{0.097}} =32$, and $( \sigma_3 = 20 )$. In addition, I also tested more sets of sigma values. The results showed that the filtered curve becomes smoother as the sigma values increase, which indicates that the filter is giving more weight to the model predictions and less weight to the noisy measurements. It is important to find a balance between smoothing and responsiveness when tuning the Kalman filter parameters.
 </p>
+
+<div class="row justify-content-center mt-4 mb-4">
+    <div class="col-md-6 text-center">
+        <img src="lab7_image/kalman_1_1.png" alt="Kalman Filter Results 1" class="img-fluid" style="max-width: 90%;">
+    </div>
+    <div class="col-md-6 text-center">
+        <img src="lab7_image/kalman_1_2.png" alt="Kalman Filter Results 2" class="img-fluid" style="max-width: 90%;">
+    </div>
+</div>
+
+<p class="lead" style="text-align: justify;">
+    The second set of results corresponds to $( \sigma_1 = 10, \sigma_2 = 20, \sigma_3 = 20 )$
+</p>
+
+<div class="row justify-content-center mt-4 mb-4">
+    <div class="col-md-6 text-center">
+        <img src="lab7_image/kalman_2_1.png" alt="Kalman Filter Results 1" class="img-fluid" style="max-width: 90%;">
+    </div>
+    <div class="col-md-6 text-center">
+        <img src="lab7_image/kalman_2_2.png" alt="Kalman Filter Results 2" class="img-fluid" style="max-width: 90%;">
+    </div>
+</div>
 
 <h4 class="text-secondary mt-3 mb-2">Implement the Kalman Filter on the Robot</h4>
 <p class="lead" style="text-align: justify;">
-    After validating the Kalman filter in Python, I integrated it into the Arduino code for PID control on the robot. From the resulting plots, it can be seen that the filtered curve becomes much smoother after applying the Kalman filter. In addition, I increased the sampling frequency in <strong>Short Mode</strong>, which produced more data points. This helped improve the measurement accuracy at short range and provided more precise feedback for control.
+    After validating the Kalman filter in Python, I integrated it into the Arduino code for PID control on the robot. I defined the matrixes in global variables. Then I apply kalman filter to the distance based on current sensor readings and my input pwm, then use this estimated distance for the rest of the control logic. The other parts are same with the realization in linear PID lab.
+</p>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab7_image/kalman_arduino.png" alt="Kalman Filter Arduino Code" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab7_image/kalman_arduino_2.png" alt="Kalman Filter Arduino Code 2" class="img-fluid" style="max-width: 60%;">
+</div>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab7_image/kalman_arduino_3.png" alt="Kalman Filter Arduino Code 3" class="img-fluid" style="max-width: 60%;">
+</div>
+<div class="text-center mt-4 mb-4">
+    <img src="lab7_image/kalman_arduino_4.png" alt="Kalman Filter Arduino Code 4" class="img-fluid" style="max-width: 80%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    From the resulting plots, it can be seen that the filtered curve becomes much smoother after applying the Kalman filter. In addition, I increased the sampling frequency in <strong>Short Mode</strong>, which produced more data points. This helped improve the measurement accuracy at short range and provided more precise feedback for control. Moreover, when the robot was too close to the wall, it would miss the data of ToF, but the kalman filter was able to provide a reasonable estimate of the distance based on the previous state and the model.
+</p>
+
+<div class="row justify-content-center mt-4 mb-4">
+    <div class="col-md-6 text-center">
+        <img src="lab7_image/kalman_res1.png" alt="Kalman Filter Results 1" class="img-fluid" style="max-width: 100%;">
+    </div>
+    <div class="col-md-6 text-center">
+        <img src="lab7_image/kalman_res2.png" alt="Kalman Filter Results 2" class="img-fluid" style="max-width: 100%;">
+    </div>
+</div>
+
+<div class="video-block video-vertical">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/zjQxoWCwYso"
+            frameborder="0" 
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+
+<h3 class="text-secondary mt-4 mb-3">Reference</h3>
+<p class="lead" style="text-align: justify;">
+    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Wenyi Fu's and Lucca Correia's websites as guidance and as references for web design. I used Nano Banana Pro to help me with generating the cover of my lab, which is shown in the home page. I used AI tools to help me with refining the writing and improving the clarity of my report.
+</p>
+
+<h4 class="text-secondary mt-4 mb-3">Note</h4>
+<p class="lead" style="text-align: justify;">
+    In the report, I did not put some code implementations of simple functions and roughly duplicate parts. If necessary, please feel free to contact me.
 </p>
 
 <div class="text-center mt-5">
