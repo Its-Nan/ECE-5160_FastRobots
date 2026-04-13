@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Lab 9 - ECE 5160 Fast Robots</title>
+
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" />
+
+    <link href="../css/styles.css" rel="stylesheet" />
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        });
+    </script>
+</head>
+
+<body id="page-top">
+
+<nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="../index.html">Back to Home</a>
+    </div>
+</nav>
+
+<header class="masthead bg-primary text-white text-center" style="padding: 9rem 0 3rem 0;">
+    <div class="container d-flex align-items-center flex-column">
+        <h1 class="masthead-heading text-uppercase mb-0">Lab 9</h1>
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
+        </div>
+        <p class="masthead-subheading font-weight-light mb-0">
+            Lab 9: Mapping
+        </p>
+    </div>
+</header>
+
+<section class="page-section" id="content">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-10">
+
+<h2 class="text-secondary mt-4 mb-3">Objective</h2>
+<p class="lead" style="text-align: justify;">
+    The purpose of this lab is to map out a static room (in this case, the front room of the lab). This map will be used in later localization and navigation tasks. To build the map, the robot is placed at several marked locations and rotates about its axis while collecting ToF readings.
+</p>
+
+<hr class="my-4">
+
+<h2 class="text-secondary mt-4 mb-3">Lab Tasks</h2>
+
+<h3 class="text-secondary mt-3 mb-2">Orientation Control Implementation</h3>
+<p class="lead" style="text-align: justify;">
+    In this task, I used a PID orientation controller to perform accurate on-axis rotations. Since orientation PID control was implemented in a previous lab, it was straightforward to reuse it for controlled angular motion.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    I set the robot to rotate in increments of 15 degrees. Therefore, a full 360-degree scan consists of 24 steps. To implement this, I created a <code>MAP</code> command case, which includes parameters such as PID gains and the stop time at each angle. I set a stop time of 1 second at each orientation to ensure sufficient data collection.
+</p>
+
+<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-cpp">case MAP:
+{
+    float Kp, Ki, Kd;
+    float step_deg;
+    int num_steps;
+    int stop_ms;
+    int max_step_time_ms;
+
+    bool ok = true;
+    ok &= robot_cmd.get_next_value(Kp);
+    ok &= robot_cmd.get_next_value(Ki);
+    ok &= robot_cmd.get_next_value(Kd);
+    ok &= robot_cmd.get_next_value(step_deg);
+    ok &= robot_cmd.get_next_value(num_steps);
+    ok &= robot_cmd.get_next_value(stop_ms);
+    ok &= robot_cmd.get_next_value(max_step_time_ms);
+    if (!ok) return;
+
+    stop();
+    delay(200);
+
+    calibrate_gyro_bias();
+    myICM.resetFIFO();
+
+    if (!init_yaw_zero()) {
+        Serial.println("Failed to initialize yaw zero");
+        return;
+    }
+
+    map_n = 0;
+
+    distanceSensorLeft.startRanging();
+    delay(50);
+
+    unsigned long scan_start_time = millis();
+
+    for (int seg = 0; seg < num_steps; seg++) {
+        float target_yaw = wrap_angle_deg((seg + 1) * step_deg); // compute target yaw for this segment
+
+        // Phase 0: turning to target
+        unsigned long seg_start = millis();
+        while ((millis() - seg_start < (unsigned long)max_step_time_ms) && map_n < MAP_DATA_NUM) {
+            float yaw_abs_now;
+            if (!read_dmp_yaw_latest(yaw_abs_now)) {
+                delay(1);
+                continue;
+            }
+            float current_yaw = wrap_angle_deg(yaw_abs_now - yaw_dmp_zero);
+            float yaw_rate = 0.0f;
+            if (myICM.dataReady()) {
+                myICM.getAGMT();
+                yaw_rate = myICM.gyrZ() - gyro_z_bias;
+            }
+
+            float pterm, iterm, dterm;
+            int u = pid_orientation_control(Kp, Ki, Kd,
+                                            current_yaw, target_yaw, yaw_rate,
+                                            pterm, iterm, dterm);
+
+            record_map_sample(scan_start_time, seg, 0, target_yaw,
+                              current_yaw, yaw_rate, u);  // 0 is to record the turning / target phase
+
+            float err = wrap_angle_deg(target_yaw - current_yaw);
+            if (fabs(err) < 5.0f) {
+                stop();
+                break;
+            }
+        }
+
+        // Phase 1: stop at target and record data
+        stop();
+        unsigned long stop_start = millis();
+
+        while ((millis() - stop_start < (unsigned long)stop_ms) && map_n < MAP_DATA_NUM) {
+            float yaw_abs_now;
+            if (!read_dmp_yaw_latest(yaw_abs_now)) {
+                delay(1);
+                continue;
+            }
+            float current_yaw = wrap_angle_deg(yaw_abs_now - yaw_dmp_zero);
+            float yaw_rate = 0.0f;
+            if (myICM.dataReady()) {
+                myICM.getAGMT();
+                yaw_rate = myICM.gyrZ() - gyro_z_bias;
+            }
+
+            record_map_sample(scan_start_time, seg, 1, target_yaw,
+                              current_yaw, yaw_rate, 0);
+
+            delay(2);
+        }
+    }
+
+    distanceSensorLeft.stopRanging();
+    stop();
+    send_map_data_over_ble();
+    break;
+}</code></pre>
+
+<p class="lead" style="text-align: justify;">
+    The above code snippet shows the implementation of the <code>MAP</code> command case. The robot first turns to the target angle and then stops to record data for a specified duration. The PID controller is used to achieve accurate orientation control during the turning phase.
+    And the following code snippet shows how I sent the command from the client side to initiate the mapping process.
+</p>
+
+<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-cpp">kp=2.5
+ki=0.25
+kd=0.32
+step_deg=15
+num_steps=25
+stop_ms=1000
+max_step_time_ms=2500
+
+payload = f"{kp}|{ki}|{kd}|{step_deg}|{num_steps}|{stop_ms}|{max_step_time_ms}"
+ble.send_command(CMD.MAP, payload)</code></pre>
+
+<p class="lead" style="text-align: justify;">
+    During the rotation, the robot continuously records the corresponding distance measurements. After completing one full rotation, the robot obtains a complete 360-degree distance profile for that location. The collected data is then transmitted via BLE for further processing.
+</p>
+
+<div class="video-block video-vertical mx-auto mt-4 mb-4" style="max-width: 30%;">
+    <div class="ratio ratio-9x16 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/tYk-nsXU9QI"
+            frameborder="0"
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<p class="lead" style="text-align: justify;">
+    The recorded video shows that the robot rotates in consistent small-angle increments and stops after completing the full 360-degree scan.
+</p>
+
+<hr class="my-4">
+
+<h3 class="text-secondary mt-3 mb-2">Data Analysis</h3>
+<p class="lead" style="text-align: justify;">
+    After collecting the data, I analyzed one example dataset corresponding to the position (-3, -2). The measured target values exhibit a step-like pattern because the robot pauses at each fixed angle during rotation. The discontinuity in the angle plot is caused by mapping the angle into the range of -180 to 180 degrees.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    By comparing both the measurement plots and the spatial visualization, it can be observed that between approximately 15 degrees and 60 degrees, the robot detects a relatively large distance, which matches the actual layout of the environment. For the remaining angles, the measured distances are stable and consistent with expectations.
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab9_image/m3m2-measure.png" alt="Data Analysis" class="img-fluid" style="max-width: 80%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    Based on the experimental requirements, I generated polar plots for four different measurement locations. These results are clear and reasonably accurate.
+</p>
+
+<div class="row justify-content-center mt-4 mb-4">
+    
+    <div class="col-md-6 text-center">
+        <img src="lab9_image/scan2_03_polar.png" alt="Polar Plots" class="img-fluid" style="max-width: 90%;">
+    </div>
+
+    <div class="col-md-6 text-center">
+        <img src="lab9_image/scan2_53_polar.png" alt="3D Visualization" class="img-fluid" style="max-width: 90%;">
+    </div>
+
+    <div class="col-md-6 text-center mt-4">
+        <img src="lab9_image/scan2_m3m2_polar.png" alt="3D Visualization" class="img-fluid" style="max-width: 90%;">
+    </div>
+
+    <div class="col-md-6 text-center mt-4">
+        <img src="lab9_image/scan2_5m3_polar.png" alt="3D Visualization" class="img-fluid" style="max-width: 90%;">
+    </div>
+
+</div>
+
+
+<p class="lead" style="text-align: justify;">
+    Next, I combined the data from these four locations to construct a global map of the environment. I also estimated and visualized the boundary of the mapped area.
+</p>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab9_image/merged_arena_map2—2.png" alt="3D Visualization" class="img-fluid" style="max-width: 80%;">
+</div>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab9_image/Figure_1.png" alt="3D Visualization" class="img-fluid" style="max-width: 80%;">
+</div>
+<p class="lead" style="text-align: justify;">
+    Overall, the reconstructed map shows a good alignment with the actual environment. Some minor deviations or tilting may be caused by measurement noise or slight errors in the initial positioning. We can see that the center box region can not be mapped accurately, maybe due to the limited field of view or occlusions. However, the overall mapping result is accurate and satisfactory.
+</p>
+
+<h3 class="text-secondary mt-4 mb-3">Reference</h3>
+<p class="lead" style="text-align: justify;">
+    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Wenyi Fu's and Lucca Correia's websites as guidance and as references for web design. I used Nano Banana Pro to help me with generating the cover of my lab, which is shown in the home page. I used AI tools to help me with refining the writing and improving the clarity of my report.
+</p>
+
+<h4 class="text-secondary mt-4 mb-3">Note</h4>
+<p class="lead" style="text-align: justify;">
+    In the report, I did not put some code implementations of simple functions and roughly duplicate parts. If necessary, please feel free to contact me.
+</p>
+
+<div class="text-center mt-5">
+    <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
