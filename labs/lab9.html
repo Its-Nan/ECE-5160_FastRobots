@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" />
 
     <link href="../css/styles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 
     <!-- KaTeX -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -178,7 +179,7 @@
     And the following code snippet shows how I sent the command from the client side to initiate the mapping process.
 </p>
 
-<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-cpp">kp=2.5
+<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-python">kp=2.5
 ki=0.25
 kd=0.32
 step_deg=15
@@ -279,7 +280,8 @@ ble.send_command(CMD.MAP, payload)</code></pre>
 </div>
 </div>
 </section>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
