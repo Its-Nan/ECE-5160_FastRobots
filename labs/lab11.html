@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Lab 11 - ECE 5160 Fast Robots</title>
+
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" />
+
+    <link href="../css/styles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        });
+    </script>
+</head>
+
+<body id="page-top">
+
+<nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="../index.html">Back to Home</a>
+    </div>
+</nav>
+
+<header class="masthead bg-primary text-white text-center" style="padding: 9rem 0 3rem 0;">
+    <div class="container d-flex align-items-center flex-column">
+        <h1 class="masthead-heading text-uppercase mb-0">Lab 11</h1>
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
+        </div>
+        <p class="masthead-subheading font-weight-light mb-0">
+            Lab 11 Localization on the Real Robot
+        </p>
+    </div>
+</header>
+
+<section class="page-section" id="content">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-10">
+
+
+<h2 class="text-secondary mt-3 mb-2">Objective</h2>
+<p class="lead" style="text-align: justify;">
+    In this lab, we perform localization on the actual robot using the Bayes filter.
+</p>
+
+<hr class="my-4">
+
+<h2 class="text-secondary mt-4 mb-3">Lab Tasks</h2>
+
+<h3 class="text-secondary mt-3 mb-2">Bayes Filter (Sim)</h3>
+<p class="lead" style="text-align: justify;">
+    First, I ran the provided <code>lab11_sim.ipynb</code> to verify the simulation results. From the figure, we can see that the simulated Bayes filter trajectory is as expected and performs much better than the odometry model.
+</p>
+
+<div class="text-center mt-4 mb-4">
+    <img src="lab11_image/sim.png" alt="Data Analysis" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<h3 class="text-secondary mt-3 mb-2">Bayes Filter (Real)</h3>
+<p class="lead" style="text-align: justify;">
+    In this part, the goal is to perform localization on the map using the real robot in the physical environment. To do this, I first implemented a function on the Arduino that makes the robot rotate through a full scan while collecting sensor data. Since I had already implemented a similar function in Lab 9, the main change here was to modify the scan parameters to 18 steps of 20 degrees each.
+</p>
+
+<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-cpp">case MAP:
+{
+    float Kp, Ki, Kd;
+    float step_deg;
+    int num_steps;
+    int stop_ms;
+
+    bool ok = true;
+    ok &= robot_cmd.get_next_value(Kp);
+    ok &= robot_cmd.get_next_value(Ki);
+    ok &= robot_cmd.get_next_value(Kd);
+    ok &= robot_cmd.get_next_value(step_deg);
+    ok &= robot_cmd.get_next_value(num_steps);
+    ok &= robot_cmd.get_next_value(stop_ms);
+    if (!ok) return;
+
+    stop();
+    delay(200);
+
+    calibrate_gyro_bias();
+    myICM.resetFIFO();
+
+    if (!init_yaw_zero()) {
+        Serial.println("Failed to initialize yaw zero");
+        return;
+    }
+
+    distanceSensorLeft.startRanging();
+    delay(50);
+
+    unsigned long scan_start_time = millis();
+
+    for (int seg = 0; seg < num_steps; seg++) {
+        float target_yaw = wrap_angle_deg(seg * step_deg);
+
+        // Phase 0: turning to target
+        while (map_n < MAP_DATA_NUM) {
+            float yaw_abs_now;
+            if (!read_dmp_yaw_latest(yaw_abs_now)) {
+                delay(1);
+                continue;
+            }
+
+            float current_yaw = wrap_angle_deg(yaw_abs_now - yaw_dmp_zero);
+
+            float yaw_rate = 0.0f;
+            if (myICM.dataReady()) {
+                myICM.getAGMT();
+                yaw_rate = myICM.gyrZ() - gyro_z_bias;
+            }
+
+            float pterm, iterm, dterm;
+            int u = pid_orientation_control(Kp, Ki, Kd,
+                                            current_yaw, target_yaw, yaw_rate,
+                                            pterm, iterm, dterm);
+
+            record_map_sample(scan_start_time, seg, 0, target_yaw,
+                              current_yaw, yaw_rate, u);
+
+            float err = wrap_angle_deg(target_yaw - current_yaw);
+            if (fabs(err) < 2.0f) {
+                stop();
+                break;
+            }
+        }
+
+        // Phase 1: stop and record at target
+        stop();
+        unsigned long stop_start = millis();
+
+        while ((millis() - stop_start < (unsigned long)stop_ms) && map_n < MAP_DATA_NUM) {
+            float yaw_abs_now;
+            if (!read_dmp_yaw_latest(yaw_abs_now)) {
+                delay(1);
+                continue;
+            }
+
+            float current_yaw = wrap_angle_deg(yaw_abs_now - yaw_dmp_zero);
+
+            float yaw_rate = 0.0f;
+            if (myICM.dataReady()) {
+                myICM.getAGMT();
+                yaw_rate = myICM.gyrZ() - gyro_z_bias;
+            }
+
+            record_map_sample(scan_start_time, seg, 1, target_yaw,
+                              current_yaw, yaw_rate, 0);
+
+            delay(2);
+        }
+    }
+}</code></pre>
+
+<p class="lead" style="text-align: justify;">
+    In the Lab 9 implementation, the robot collected data while rotating clockwise. However, in this lab, the localization framework assumes a counterclockwise angular convention, so I made the corresponding adjustment during Python data processing. After receiving the raw records, the Python code groups them by segment and prioritizes the stop-stage data (<code>phase = 1</code>), since these measurements are more stable. For each angular segment, I take the median of the multiple ToF readings as the final observation in that direction.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    Because the robot scans in the clockwise direction while the localization module defines counterclockwise as positive, I converted the angle in Python using <code>angle_new = (360 - angle) % 360</code>. Then I reordered the observations into the sequence <code>0°, 20°, 40°, ..., 340°</code>, which produced a length-18 <code>sensor_ranges</code> array and the corresponding <code>sensor_bearings</code>. These were then used as the input to the Bayes filter update step for real-robot localization.
+</p>
+
+<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-python">def extract_observation_vector(records, observation_count=18):
+    cols = ["t", "seg", "phase", "target", "measured", "dist", "yaw_rate", "u"]
+    df = pd.DataFrame(records, columns=cols)
+
+    obs_angles = []
+    obs_ranges = []
+
+    for seg_id in range(observation_count):
+        sub = df[df["seg"] == seg_id]
+
+        sub_phase = sub[sub["phase"] == 1]
+        sub = sub_phase
+
+        angle = float(sub["target"].iloc[0])
+        rng = float(sub["dist"].median())
+
+        angle = (360 - angle) % 360
+        obs_angles.append(angle)
+        obs_ranges.append(rng)
+
+    pairs = sorted(zip(obs_angles, obs_ranges), key=lambda x: x[0])
+    obs_angles = [p[0] for p in pairs]
+    obs_ranges = [p[1] for p in pairs]
+
+    return obs_angles, obs_ranges</code></pre>
+
+<p class="lead" style="text-align: justify;">
+    In <code>perform_observation_loop</code>, I implemented the full pipeline of sending commands, collecting data, and processing data. First, I used <code>ble.command</code> to send the rotation-and-scan instruction. After waiting for the scan to complete, the data was transmitted back to Python, processed, and then used for position estimation.
+</p>
+
+<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-python">def perform_observation_loop(self, rot_vel=120):
+    global map_records
+    map_records = []
+
+    observation_count = 18
+    step_deg = 20.0
+    kp = 3.2
+    ki = 0.3
+    kd = 0.32
+    stop_ms = 300
+
+    payload = f"{kp}|{ki}|{kd}|{step_deg}|{observation_count}|{stop_ms}"
+    wait_time_s = observation_count * stop_ms / 1000.0 + 10.0
+
+    self.ble.start_notify(self.ble.uuid['RX_STRING'], map_notification_handler)
+    self.ble.send_command(CMD.MAP, payload)
+    time.sleep(wait_time_s)
+    self.ble.stop_notify(self.ble.uuid['RX_STRING'])
+
+    angles_deg, ranges_mm = extract_observation_vector(
+        map_records,
+        observation_count=observation_count
+    )
+
+    sensor_ranges = (np.array(ranges_mm, dtype=float) / 1000.0)[np.newaxis].T
+    sensor_bearings = np.array(angles_deg, dtype=float)[np.newaxis].T
+
+    return sensor_ranges, sensor_bearings</code></pre>
+
+<h3 class="text-secondary mt-3 mb-2">Results</h3>
+<p class="lead" style="text-align: justify;">
+    In addition, I plotted the ground-truth position of the test point in the figure to make comparison easier. During the experiment, I initially found that the localization accuracy was very poor. After checking the implementation, I found that the ToF sensor was still using Short Mode, which could not provide accurate readings at longer distances and therefore caused localization errors. After switching the sensor to Long Mode, the robot was able to achieve much more accurate localization.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    The final localization results are shown in the figure below. The Bayes filter successfully estimated the robot's position on the map.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    The result of (0, 3)
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab11_image/real_0_3.png" alt="Data Analysis" class="img-fluid" style="max-width: 50%;">
+</div>
+<div class="text-center mt-4 mb-4">
+    <img src="lab11_image/real_0_3_2.png" alt="Data Analysis" class="img-fluid" style="max-width: 50%;">
+</div>
+<p class="lead" style="text-align: justify;">
+    The result of (5, 3)
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab11_image/real_5_3.png" alt="Data Analysis" class="img-fluid" style="max-width: 50%;">
+</div>
+<div class="text-center mt-4 mb-4">
+    <img src="lab11_image/real_5_3_2.png" alt="Data Analysis" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    The result of (5, -3)
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab11_image/real_5_-3.png" alt="Data Analysis" class="img-fluid" style="max-width: 50%;">
+</div>
+<div class="text-center mt-4 mb-4">
+    <img src="lab11_image/real_5_-3_2.png" alt="Data Analysis" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<p class="lead" style="text-align: justify;">
+    The result of (-3, -2)
+</p>
+<div class="text-center mt-4 mb-4">
+    <img src="lab11_image/real_-3_-2.png" alt="Data Analysis" class="img-fluid" style="max-width: 50%;">
+</div>
+<div class="text-center mt-4 mb-4">
+    <img src="lab11_image/real_-3_-2_2.png" alt="Data Analysis" class="img-fluid" style="max-width: 50%;">
+</div>
+
+<h3 class="text-secondary mt-4 mb-3">Reference</h3>
+<p class="lead" style="text-align: justify;">
+    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Wenyi Fu's and Lucca Correia's websites as guidance and as references for web design. I used AI tools to help me with refining the writing and improving the clarity of my report.
+</p>
+
+<div class="text-center mt-5">
+    <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
