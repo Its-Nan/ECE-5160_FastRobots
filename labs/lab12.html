@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Lab 12 - ECE 5160 Fast Robots</title>
+
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" />
+
+    <link href="../css/styles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        });
+    </script>
+</head>
+
+<body id="page-top">
+
+<nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="../index.html">Back to Home</a>
+    </div>
+</nav>
+
+<header class="masthead bg-primary text-white text-center" style="padding: 9rem 0 3rem 0;">
+    <div class="container d-flex align-items-center flex-column">
+        <h1 class="masthead-heading text-uppercase mb-0">Lab 12</h1>
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
+        </div>
+        <p class="masthead-subheading font-weight-light mb-0">
+            Lab 12 Path Planning and Execution
+        </p>
+    </div>
+</header>
+
+<section class="page-section" id="content">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-10">
+
+
+<h2 class="text-secondary mt-3 mb-2">Objective</h2>
+<p class="lead" style="text-align: justify;">
+    The objective of this lab is to integrate the major components developed in previous labs and use them to complete path planning and execution. This includes combining ToF-based linear PID control, IMU-based orientation PID control, BLE communication, and sensor feedback to control the robot’s motion more accurately.
+</p>
+
+<hr class="my-4">
+
+<h2 class="text-secondary mt-4 mb-3">Lab Tasks</h2>
+
+<p class="lead" style="text-align: justify;">
+    In this lab, I implemented waypoint-based path planning and execution. A sequence of predefined waypoints was used to define the desired trajectory. For each segment between two consecutive waypoints, I computed the required rotation angle and distance. Based on this, I integrated both orientation PID control and linear PID control from previous labs to perform feedback control. This allows the robot to rotate to a precise angle and then move forward a specified distance for each segment, enabling accurate path following.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Arduino Implementation</h4>
+<p class="lead" style="text-align: justify;">
+    Compared to previous PID control implementations, each motion step now consists of two stages: 1.Rotating the robot to the desired heading; 2.Moving forward for a target distance
+</p>
+
+<p class="lead" style="text-align: justify;">
+    To implement this, I first measured the initial ToF distance and then computed the corresponding target distance for the motion segment. The linear PID controller was used to regulate the forward motion based on the difference between the current and target ToF readings.
+</p>
+
+<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-cpp">void move_forward_tof_delta(float Kp, float Ki, float Kd, int distance_mm, int timeout_ms, int stop_tol_mm) {
+  stop();
+  // Because the front distance sensor is broken, the distanceSensorLeft is the front sensor now.
+  distanceSensorLeft.startRanging();
+
+  // Read initial ToF distance
+  int initial_tof = read_valid_tof();
+  int target_tof = initial_tof - distance_mm;
+  
+  unsigned long start_time = millis();
+  int stable_count = 0;
+
+  while (millis() - start_time &lt; (unsigned long)timeout_ms) {
+    if (!distanceSensorLeft.checkForDataReady()) {
+      delay(2);
+      continue;
+    }
+
+    int current_tof = distanceSensorLeft.getDistance();
+    distanceSensorLeft.clearInterrupt();
+
+    if (current_tof &lt; 30 || current_tof &gt; 4000) {
+      continue;
+    }
+
+    float pterm, iterm, dterm;
+    int u = pid_position_tof(Kp, Ki, Kd, current_tof, target_tof, pterm, iterm, dterm);
+
+    int err = current_tof - target_tof;
+
+    if (abs(err) &lt;= stop_tol_mm) {
+      stable_count++;
+    } else {
+      stable_count = 0;
+    }
+
+    // ... optionally record PID data here
+
+    if (stable_count &gt;= 3) {
+      break;
+    }
+
+    delay(5);
+  }
+
+  distanceSensorLeft.stopRanging();
+  stop();
+
+  // ... optionally send summary and PID log here
+}</code></pre>
+
+<p class="lead" style="text-align: justify;">
+    The control logic was implemented using a case structure, similar to previous labs. The overall PID control framework remains the same, including error computation, proportional-integral-derivative updates, and output. By combining orientation and linear control in sequence, the robot can execute each planned segment.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Python Implementation</h4>
+<p class="lead" style="text-align: justify;">
+    On the Python side, I predefined all the waypoints that define the desired path. I then implemented functions to compute the required rotation angle and travel distance between consecutive waypoints.
+</p>
+
+<p class="lead" style="text-align: justify;">
+    For example, when moving from (-4, -3) to (-2, -1), we first compute the displacement (dx, dy). Using the atan2 function, we calculate the required rotation angle, which is $45^\circ$. Then, we compute the corresponding travel distance. In addition, we return the current heading after executing the segment, which will be used as the previous heading for the next segment. This way, we can ensure that the robot correctly updates its orientation and position as it follows the planned path.
+</p>
+
+<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-python">def execute_segment(p0, p1, previous_heading=0.0, chunk_mm=200):
+    """
+    p0, p1: grid coordinates, e.g. (-4, -3), (-2, -1)
+    """
+    x0, y0 = p0
+    x1, y1 = p1
+
+    dx = x1 - x0
+    dy = y1 - y0
+
+    desired_heading = math.degrees(math.atan2(dx, dy))
+    turn_angle = wrap_to_180(desired_heading - previous_heading)
+
+    distance_cells = math.sqrt(dx * dx + dy * dy)
+    distance_mm = distance_cells * CELL_SIZE_MM
+
+    // ... print some debug info
+
+    send_turn(turn_angle, kp=ORI_KP, ki=ORI_KI, kd=ORI_KD)
+    time.sleep(0.3)
+
+    send_move_tof_chunked(distance_mm)
+    time.sleep(0.3)
+
+    send_stop()
+
+    return desired_heading</code></pre>
+
+<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-python">WAYPOINTS = [(-4, -3), (-2, -1), (1, -1), (2, -3), (5, -3), (5, -2), (5, 3), (0, 3), (0, 0)]
+
+prev_heading = 0.0
+
+for i in range(len(WAYPOINTS) - 1):
+    p0 = WAYPOINTS[i]
+    p1 = WAYPOINTS[i + 1]
+
+    prev_heading = execute_segment(p0, p1, previous_heading=prev_heading)
+
+    time.sleep(0.5)</code></pre>
+
+<p class="lead" style="text-align: justify;">
+    For each segment, the computed parameters were sent to the robot via BLE commands, triggering the corresponding control case on the Arduino. This enables the robot to execute the planned trajectory step by step.
+</p>
+
+<h4 class="text-secondary mt-3 mb-2">Discussion</h4>
+<p class="lead" style="text-align: justify;">
+    The integration of orientation and linear control allows the robot to follow paths defined by multiple waypoints. However, the path planning and execution was not very accurate, and in the video, I sometimes should adjust the position a little by hand to make the robot reach the target. This may be due to several factors, including sensor noise, PID tuning and so on. Moreover, I didn't have enough time to combine the localization process. I think this is also important for improving the accuracy of path execution, but the localization need much time to rotate the robot and collect IMU data, which makes the overall time longer.
+</p>
+
+<div class="text-center mt-5">
+    <a class="btn btn-primary btn-lg" href="../index.html">Back To Page</a>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
