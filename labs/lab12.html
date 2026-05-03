@@ -188,6 +188,16 @@ for i in range(len(WAYPOINTS) - 1):
     For each segment, the computed parameters were sent to the robot via BLE commands, triggering the corresponding control case on the Arduino. This enables the robot to execute the planned trajectory step by step.
 </p>
 
+<div class="video-block video-vertical mx-auto mt-4 mb-4" style="max-width: 80%;">
+    <div class="ratio ratio-16x9 shadow">
+        <iframe 
+            src="https://www.youtube.com/embed/c6ZYJ4-Zfz0"
+            frameborder="0"
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
 <h4 class="text-secondary mt-3 mb-2">Discussion</h4>
 <p class="lead" style="text-align: justify;">
     The integration of orientation and linear control allows the robot to follow paths defined by multiple waypoints. However, the path planning and execution was not very accurate, and in the video, I sometimes should adjust the position a little by hand to make the robot reach the target. This may be due to several factors, including sensor noise, PID tuning and so on. Moreover, I didn't have enough time to combine the localization process. I think this is also important for improving the accuracy of path execution, but the localization need much time to rotate the robot and collect IMU data, which makes the overall time longer.
