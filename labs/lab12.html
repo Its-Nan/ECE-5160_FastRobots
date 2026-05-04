@@ -135,13 +135,17 @@
     The control logic was implemented using a case structure, similar to previous labs. The overall PID control framework remains the same, including error computation, proportional-integral-derivative updates, and output. By combining orientation and linear control in sequence, the robot can execute each planned segment.
 </p>
 
+<p class="lead" style="text-align: justify;">
+    Other control cases and codes, such as turning a specific angle, linear PID control and orientation PID control are implemented similarly to previous labs, with some adjustments to accommodate the new control flow and parameters.
+</p>
+
 <h4 class="text-secondary mt-3 mb-2">Python Implementation</h4>
 <p class="lead" style="text-align: justify;">
     On the Python side, I predefined all the waypoints that define the desired path. I then implemented functions to compute the required rotation angle and travel distance between consecutive waypoints.
 </p>
 
 <p class="lead" style="text-align: justify;">
-    For example, when moving from (-4, -3) to (-2, -1), we first compute the displacement (dx, dy). Using the atan2 function, we calculate the required rotation angle, which is $45^\circ$. Then, we compute the corresponding travel distance. In addition, we return the current heading after executing the segment, which will be used as the previous heading for the next segment. This way, we can ensure that the robot correctly updates its orientation and position as it follows the planned path.
+    For example, when moving from (-4, -3) to (-2, -1), I first compute the displacement (dx, dy). Using the <code>atan2</code> function, I calculate the required rotation angle, which is $45^\circ$. Then, I compute the corresponding travel distance. In addition, I return the current heading after executing the segment, which will be used as the previous heading for the next segment. This way, I can ensure that the robot correctly updates its orientation and position as it follows the planned path.
 </p>
 
 <pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-python">def execute_segment(p0, p1, previous_heading=0.0, chunk_mm=200):
@@ -200,7 +204,12 @@ for i in range(len(WAYPOINTS) - 1):
 
 <h4 class="text-secondary mt-3 mb-2">Discussion</h4>
 <p class="lead" style="text-align: justify;">
-    The integration of orientation and linear control allows the robot to follow paths defined by multiple waypoints. However, the path planning and execution was not very accurate, and in the video, I sometimes should adjust the position a little by hand to make the robot reach the target. This may be due to several factors, including sensor noise, PID tuning and so on. Moreover, I didn't have enough time to combine the localization process. I think this is also important for improving the accuracy of path execution, but the localization need much time to rotate the robot and collect IMU data, which makes the overall time longer.
+    The integration of orientation and linear control allows the robot to follow paths defined by multiple waypoints. However, the path planning and execution was not very accurate, and in the video, I sometimes should adjust the position a little by hand to make the robot reach the target. This may be due to several factors, including sensor noise, PID tuning and so on. Moreover, I didn't have enough time to combine the localization process. I think this is also important for improving the accuracy of path execution, but the localization need much time to rotate the robot and collect IMU data, which makes the overall time longer. In the future, I would like to explore how to optimize the localization process and integrate it into the path execution to further improve the accuracy and robustness of the system.
+</p>
+
+<h3 class="text-secondary mt-4 mb-3">Reference</h3>
+<p class="lead" style="text-align: justify;">
+    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Wenyi Fu's and Lucca Correia's websites as guidance and as references for web design. I used AI tools to help me with refining the writing and improving the clarity of my report.
 </p>
 
 <div class="text-center mt-5">
