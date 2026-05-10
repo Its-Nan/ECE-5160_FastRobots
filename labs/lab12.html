@@ -145,10 +145,10 @@
 </p>
 
 <p class="lead" style="text-align: justify;">
-    For example, when moving from (-4, -3) to (-2, -1), I first compute the displacement (dx, dy). Using the <code>atan2</code> function, I calculate the required rotation angle, which is $45^\circ$. Then, I compute the corresponding travel distance. In addition, I return the current heading after executing the segment, which will be used as the previous heading for the next segment. This way, I can ensure that the robot correctly updates its orientation and position as it follows the planned path.
+    For example, when moving from (-4, -3) to (-2, -1), I first compute the displacement (dx, dy). Using the <code>atan2</code> function, I calculate the required rotation angle, which is $45^\circ$. Then, I compute the corresponding distance. The function <code>send_turn</code> is called to execute the rotation, and <code>send_move_tof</code> is called to move the robot forward. In addition, I return the current heading after executing the segment, which will be used as the previous heading for the next segment. This way, I can ensure that the robot correctly updates its orientation and position as it follows the planned path.
 </p>
 
-<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-python">def execute_segment(p0, p1, previous_heading=0.0, chunk_mm=200):
+<pre style="background-color:#f8f9fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #ddd;"><code class="language-python">def execute_segment(p0, p1, previous_heading=0.0):
     """
     p0, p1: grid coordinates, e.g. (-4, -3), (-2, -1)
     """
@@ -169,7 +169,7 @@
     send_turn(turn_angle, kp=ORI_KP, ki=ORI_KI, kd=ORI_KD)
     time.sleep(0.3)
 
-    send_move_tof_chunked(distance_mm)
+    send_move_tof(distance_mm)
     time.sleep(0.3)
 
     send_stop()
@@ -189,7 +189,7 @@ for i in range(len(WAYPOINTS) - 1):
     time.sleep(0.5)</code></pre>
 
 <p class="lead" style="text-align: justify;">
-    For each segment, the computed parameters were sent to the robot via BLE commands, triggering the corresponding control case on the Arduino. This enables the robot to execute the planned trajectory step by step.
+    For each segment, the computed parameters were sent to the robot via BLE commands, triggering the corresponding control case on the Arduino. This enables the robot to execute the planned trajectory step by step. This is the video of the whole process, and the robot successfully follows the path defined by the waypoints.
 </p>
 
 <div class="video-block video-vertical mx-auto mt-4 mb-4" style="max-width: 80%;">
@@ -204,12 +204,16 @@ for i in range(len(WAYPOINTS) - 1):
 
 <h4 class="text-secondary mt-3 mb-2">Discussion</h4>
 <p class="lead" style="text-align: justify;">
-    The integration of orientation and linear control allows the robot to follow paths defined by multiple waypoints. However, the path planning and execution was not very accurate, and in the video, I sometimes should adjust the position a little by hand to make the robot reach the target. This may be due to several factors, including sensor noise, PID tuning and so on. Moreover, I didn't have enough time to combine the localization process. I think this is also important for improving the accuracy of path execution, but the localization need much time to rotate the robot and collect IMU data, which makes the overall time longer. In the future, I would like to explore how to optimize the localization process and integrate it into the path execution to further improve the accuracy and robustness of the system.
+    The integration of orientation and linear control allows the robot to follow paths defined by multiple waypoints. However, the path planning and execution was not very accurate all the time. And in the video, I sometimes need to adjust the position a little by hand to make the robot reach the target, but the whole process is successful. This may be due to several factors, including sensor noise, PID tuning parameters and so on. In order to detect the distance in map, we should use Long mode of ToF sensor, and this mode is not very accurate compared with Short mode. I think another reason is that the rotation is not very precise, so it would have some error and deviation which would affect the overall performance. 
+</p>
+
+<p class="lead" style="text-align: justify;">
+    In the future, I would like to explore how to improve the accuracy and robustness of the system. For example, I can try to collect distances from ToF sensors firstly and compute the average distance to reduce the noise. I can also try to tune the PID parameters more carefully and make the robot more stable during rotation. 
 </p>
 
 <h3 class="text-secondary mt-4 mb-3">Reference</h3>
 <p class="lead" style="text-align: justify;">
-    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Wenyi Fu's and Lucca Correia's websites as guidance and as references for web design. I used AI tools to help me with refining the writing and improving the clarity of my report.
+    Thanks to Professor Helbling and the TAs for their help during lab sessions. I refer to Wenyi Fu's and Lucca Correia's websites as guidance and as references. I used AI tools to help me with refining the writing and improving the clarity of my report.
 </p>
 
 <div class="text-center mt-5">
